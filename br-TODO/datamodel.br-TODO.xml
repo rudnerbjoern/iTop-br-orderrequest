@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itop_design version="3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://rudnerbjoern.github.io/iTop-schema/3.2/itop_design.xsd">
+    <!--
+    * @copyright   Copyright (C) 2025 Björn Rudner
+    * @license     https://www.gnu.org/licenses/gpl-3.0.en.html
+    -->
+    <classes>
+        <!-- ***************** Typology ***************** -->
+
+        <!-- ***************** Classes ***************** -->
+        <class id="TODO" _delta="define">
+            <parent>TODO</parent>
+            <properties>
+                <category>bizmodel,searchable</category>
+                <abstract>false</abstract>
+                <key_type>autoincrement</key_type>
+                <db_table>TODO</db_table>
+                <db_key_field>id</db_key_field>
+                <db_final_class_field />
+                <naming>
+                    <attributes>
+                        <attribute id="name" />
+                    </attributes>
+                </naming>
+                <fields_semantic>
+                    <state_attribute>status</state_attribute>
+                </fields_semantic>
+                <style>
+                    <icon>images/TODO.png</icon>
+                </style>
+                <reconciliation>
+                    <attributes>
+                        <attribute id="name" />
+                        <attribute id="org_id" />
+                        <attribute id="organization_name" />
+                    </attributes>
+                </reconciliation>
+                <obsolescence>
+                    <condition>
+                        <![CDATA[status = 'obsolete']]>
+                    </condition>
+                </obsolescence>
+            </properties>
+            <fields />
+            <presentation>
+                <details>
+                    <items>
+                        <item id="test" />
+                    </items>
+                </details>
+                <search>
+                    <items>
+                        <item id="TODO">
+                            <rank>1</rank>
+                        </item>
+                    </items>
+                </search>
+                <list>
+                    <items>
+                        <item id="TODO">
+                            <rank>1</rank>
+                        </item>
+                    </items>
+                </list>
+                <summary>
+                    <items>
+                        <item id="TODO">
+                            <rank>1</rank>
+                        </item>
+                    </items>
+                </summary>
+            </presentation>
+            <methods />
+        </class>
+    </classes>
+    <!-- ***************** Menus ***************** -->
+    <menus>
+        <menu />
+    </menus>
+    <!-- ***************** User Rights ***************** -->
+    <user_rights>
+        <groups>
+            <group id="123">
+                <classes>
+                    <class id="TODO" />
+                </classes>
+            </group>
+        </groups>
+        <profiles>
+            <profile id="TODO">
+                <name>TODO</name>
+                <description>TODO</description>
+                <groups>
+                    <group id="123">
+                        <actions>
+                            <action id="action:read">allow</action>
+                        </actions>
+                    </group>
+                </groups>
+            </profile>
+        </profiles>
+    </user_rights>
+</itop_design>

@@ -1,0 +1,32 @@
+{
+    "cSpell.words": [
+        "applicationsolution",
+        "attcode",
+        "autoincrement",
+        "baseinfo",
+        "bizmodel",
+        "cmdb",
+        "configmgmt",
+        "criticity",
+        "dashlet",
+        "dashlets",
+        "datamodel",
+        "extkey",
+        "fieldset",
+        "finalclass",
+        "friendlyname",
+        "macaddress",
+        "moreinfo",
+        "otherinfo",
+        "physicalinterface",
+        "providercontracts",
+        "serialnumber"
+    ],
+    "xml.codeLens.enabled": true,
+    "xml.format.emptyElements": "collapse",
+    "xml.format.maxLineWidth": 0,
+    "xml.format.preserveSpace": [
+        "xs:documentation"
+    ],
+    "xml.format.spaceBeforeEmptyCloseTag": true,
+}
