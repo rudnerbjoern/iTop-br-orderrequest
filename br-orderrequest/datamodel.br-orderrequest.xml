@@ -1,0 +1,1113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<itop_design version="3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://rudnerbjoern.github.io/iTop-schema/3.2/itop_design.xsd">
+    <!--
+    * @copyright   Copyright (C) 2025 Björn Rudner
+    * @license     https://www.gnu.org/licenses/gpl-3.0.en.html
+    -->
+    <classes>
+        <class id="OrderRequest" _delta="define">
+            <parent>Ticket</parent>
+            <properties>
+                <category>bizmodel,searchable,requestmgmt</category>
+                <abstract>false</abstract>
+                <key_type>autoincrement</key_type>
+                <db_table>orderrequest</db_table>
+                <db_key_field>id</db_key_field>
+                <db_final_class_field />
+                <naming>
+                    <attributes>
+                        <attribute id="ref" />
+                    </attributes>
+                    <complementary_attributes>
+                        <attribute id="title" />
+                    </complementary_attributes>
+                </naming>
+                <style>
+                    <icon>images/TODO.svg</icon>
+                </style>
+                <reconciliation>
+                    <attributes>
+                        <attribute id="ref" />
+                        <attribute id="org_id" />
+                    </attributes>
+                </reconciliation>
+                <fields_semantic>
+                    <state_attribute>status</state_attribute>
+                </fields_semantic>
+                <order>
+                    <columns>
+                        <column id="ref" ascending="false" />
+                    </columns>
+                </order>
+            </properties>
+            <fields>
+                <field id="status" xsi:type="AttributeEnum">
+                    <values>
+                        <value id="draft">
+                            <code>draft</code>
+                            <rank>10</rank>
+                        </value>
+                        <value id="submitted">
+                            <code>submitted</code>
+                            <rank>20</rank>
+                        </value>
+                        <value id="in_review">
+                            <code>in_review</code>
+                            <rank>30</rank>
+                        </value>
+                        <value id="waiting_approval">
+                            <code>waiting_approval</code>
+                            <rank>40</rank>
+                        </value>
+                        <value id="approved">
+                            <code>approved</code>
+                            <rank>50</rank>
+                        </value>
+                        <value id="rejected">
+                            <code>rejected</code>
+                            <rank>60</rank>
+                        </value>
+                        <value id="procurement">
+                            <code>procurement</code>
+                            <rank>70</rank>
+                        </value>
+                        <value id="closed">
+                            <code>closed</code>
+                            <rank>80</rank>
+                        </value>
+                    </values>
+                    <sql>status</sql>
+                    <default_value>draft</default_value>
+                    <is_null_allowed>false</is_null_allowed>
+                    <display_style>list</display_style>
+                    <sort_type>rank</sort_type>
+                </field>
+                <field id="request_type_id" xsi:type="AttributeExternalKey">
+                    <sql>request_type_id</sql>
+                    <target_class>OrderRequestType</target_class>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                    <dependencies>
+                        <attribute id="org_id" />
+                    </dependencies>
+                </field>
+                <field id="request_type_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>request_type_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="technical_approver_id" xsi:type="AttributeExternalKey">
+                    <sql>technical_approver_id</sql>
+                    <target_class>Person</target_class>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                    <dependencies>
+                        <attribute id="org_id" />
+                        <attribute id="request_type_id" />
+                    </dependencies>
+                </field>
+                <field id="technical_approver_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>technical_approver_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="approved_by_id" xsi:type="AttributeExternalKey">
+                    <sql>approved_by_id</sql>
+                    <is_null_allowed>true</is_null_allowed>
+                    <target_class>Person</target_class>
+                    <on_target_delete>DEL_AUTO</on_target_delete>
+                    <dependencies>
+                        <attribute id="org_id" />
+                    </dependencies>
+                </field>
+                <field id="approved_by_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>approved_by_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="approval_date" xsi:type="AttributeDateTime">
+                    <sql>approval_date</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="business_justification" xsi:type="AttributeHTML">
+                    <sql>business_justification</sql>
+                    <default_value />
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="procurement_reference" xsi:type="AttributeString">
+                    <sql>procurement_reference</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="line_items" xsi:type="AttributeLinkedSet">
+                    <linked_class>OrderRequestLineItem</linked_class>
+                    <ext_key_to_me>order_request_id</ext_key_to_me>
+                    <with_php_computation>true</with_php_computation>
+                    <with_php_constraint>true</with_php_constraint>
+                </field>
+                <field id="estimated_total_cost" xsi:type="AttributeDecimal">
+                    <sql>estimated_total_cost</sql>
+                    <default_value>0.00</default_value>
+                    <is_null_allowed>false</is_null_allowed>
+                    <digits>12</digits>
+                    <decimals>2</decimals>
+                </field>
+                <field id="parent_request_id" xsi:type="AttributeExternalKey">
+                    <filter><![CDATA[SELECT UserRequest WHERE id != :this->id AND status NOT IN ('rejected','resolved','closed')]]></filter>
+                    <dependencies />
+                    <sql>parent_request_id</sql>
+                    <target_class>UserRequest</target_class>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="parent_request_ref" xsi:type="AttributeExternalField">
+                    <extkey_attcode>parent_request_id</extkey_attcode>
+                    <target_attcode>ref</target_attcode>
+                </field>
+                <field id="parent_incident_id" xsi:type="AttributeExternalKey">
+                    <filter><![CDATA[SELECT Incident WHERE status != "closed"]]></filter>
+                    <sql>parent_incident_id</sql>
+                    <target_class>Incident</target_class>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="parent_incident_ref" xsi:type="AttributeExternalField">
+                    <extkey_attcode>parent_incident_id</extkey_attcode>
+                    <target_attcode>ref</target_attcode>
+                </field>
+                <field id="parent_problem_id" xsi:type="AttributeExternalKey">
+                    <sql>parent_problem_id</sql>
+                    <target_class>Problem</target_class>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="parent_problem_ref" xsi:type="AttributeExternalField">
+                    <extkey_attcode>parent_problem_id</extkey_attcode>
+                    <target_attcode>ref</target_attcode>
+                </field>
+                <field id="parent_change_id" xsi:type="AttributeExternalKey">
+                    <filter><![CDATA[SELECT Change WHERE status != "closed"]]></filter>
+                    <sql>parent_change_id</sql>
+                    <target_class>Change</target_class>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="parent_change_ref" xsi:type="AttributeExternalField">
+                    <extkey_attcode>parent_change_id</extkey_attcode>
+                    <target_attcode>ref</target_attcode>
+                </field>
+                <field id="related_request_list" xsi:type="AttributeLinkedSet">
+                    <linked_class>UserRequest</linked_class>
+                    <ext_key_to_me>parent_request_id</ext_key_to_me>
+                    <edit_mode>add_remove</edit_mode>
+                    <count_min>0</count_min>
+                    <count_max>0</count_max>
+                </field>
+                <field id="public_log" xsi:type="AttributeCaseLog">
+                    <sql>public_log</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+            </fields>
+            <lifecycle>
+                <stimuli>
+                    <stimulus id="ev_submit" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_review" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_request_approval" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_approve" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_reject" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_procure" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_close" xsi:type="StimulusUserAction" />
+                </stimuli>
+                <states>
+                    <state id="draft">
+                        <flags>
+                            <attribute id="estimated_total_cost">
+                                <read_only />
+                            </attribute>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <hidden />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                        </flags>
+                        <transitions>
+                            <transition id="ev_submit">
+                                <target>submitted</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                            <transition id="ev_reject">
+                                <target>rejected</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="submitted">
+                        <inherit_flags_from>draft</inherit_flags_from>
+                        <flags>
+                            <attribute id="title">
+                                <read_only />
+                                <mandatory />
+                            </attribute>
+                            <attribute id="org_id">
+                                <read_only />
+                                <mandatory />
+                            </attribute>
+                            <attribute id="caller_id">
+                                <read_only />
+                                <mandatory />
+                            </attribute>
+                            <attribute id="request_type_id">
+                                <read_only />
+                                <mandatory />
+                            </attribute>
+                            <attribute id="business_justification">
+                                <read_only />
+                                <mandatory />
+                            </attribute>
+                            <attribute id="technical_approver_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="line_items">
+                                <read_only />
+                            </attribute>
+                        </flags>
+                        <transitions>
+                            <transition id="ev_review">
+                                <target>in_review</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="in_review">
+                        <inherit_flags_from>submitted</inherit_flags_from>
+                        <flags />
+                        <transitions>
+                            <transition id="ev_request_approval">
+                                <target>waiting_approval</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="waiting_approval">
+                        <inherit_flags_from>submitted</inherit_flags_from>
+                        <flags />
+                        <transitions>
+                            <transition id="ev_approve">
+                                <target>approved</target>
+                                <flags />
+                                <actions>
+                                    <action id="set-approver">
+                                        <verb>SetCurrentPerson</verb>
+                                        <params>
+                                            <param xsi:type="string">approved_by_id</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-approval-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">approval_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
+                            </transition>
+                            <transition id="ev_reject">
+                                <target>rejected</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="approved">
+                        <inherit_flags_from>submitted</inherit_flags_from>
+                        <flags>
+                            <attribute id="approved_by_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                        </flags>
+                        <transitions>
+                            <transition id="ev_procure">
+                                <target>procurement</target>
+                                <flags>
+                                    <attribute id="procurement_reference">
+                                        <mandatory />
+                                    </attribute>
+                                </flags>
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="procurement">
+                        <inherit_flags_from>approved</inherit_flags_from>
+                        <flags>
+                            <attribute id="procurement_reference">
+                                <read_only />
+                            </attribute>
+                        </flags>
+                        <transitions>
+                            <transition id="ev_close">
+                                <target>closed</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="rejected">
+                        <flags />
+                        <transitions />
+                    </state>
+                    <state id="closed">
+                        <inherit_flags_from>procurement</inherit_flags_from>
+                        <flags />
+                        <transitions />
+                    </state>
+                </states>
+            </lifecycle>
+            <!-- Events & Methoden: Summe auf dem Parent pflegen -->
+            <event_listeners>
+                <event_listener id="HideSubmitIfNoItems">
+                    <event>EVENT_ENUM_TRANSITIONS</event>
+                    <callback>EvtHideSubmitIfNoItems</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <!-- Wenn Positionen geändert/neu/gelöscht werden -->
+                <event_listener id="RecalcOnLinksChanged">
+                    <event>EVENT_DB_LINKS_CHANGED</event>
+                    <callback>EvtComputeEstimatedTotalCost</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="SyncTechnicalApproverOnCompute">
+                    <event>EVENT_DB_COMPUTE_VALUES</event>
+                    <callback>EvtSyncTechnicalApprover</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <!-- Wenn im gleichen Formular die LinkedSet-Liste editiert wird -->
+                <event_listener id="RecalcBeforeWrite">
+                    <event>EVENT_DB_BEFORE_WRITE</event>
+                    <callback>EvtRecalcBeforeWrite</callback>
+                    <rank>20</rank>
+                </event_listener>
+                <event_listener id="CheckMinOneItemOnSubmit">
+                    <event>EVENT_DB_CHECK_TO_WRITE</event>
+                    <callback>EvtCheckMinOneItemOnSubmit</callback>
+                    <rank>30</rank>
+                </event_listener>
+                <!-- Optional: Feld auf Neu verstecken, auf Edit readonly -->
+                <event_listener id="HideTotalOnCreate">
+                    <event>EVENT_DB_SET_INITIAL_ATTRIBUTES_FLAGS</event>
+                    <callback>EvtHideTotalOnCreate</callback>
+                    <rank>5</rank>
+                </event_listener>
+                <event_listener id="MakeTotalReadonly">
+                    <event>EVENT_DB_SET_ATTRIBUTES_FLAGS</event>
+                    <callback>EvtMakeTotalReadonly</callback>
+                    <rank>5</rank>
+                </event_listener>
+            </event_listeners>
+            <methods>
+                <method id="EvtSyncTechnicalApprover">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtSyncTechnicalApprover(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    // Wenn kein Typ gesetzt ist, nichts tun
+    $iTypeId = (int) $this->Get('request_type_id');
+    if ($iTypeId <= 0) { return; }
+
+    // Nur setzen, wenn leer ODER Typ soeben geändert wurde
+    $aChanges = $this->ListChanges();
+    $bTypeChanged = array_key_exists('request_type_id', $aChanges);
+    $iCurrentApprover = (int) $this->Get('technical_approver_id');
+    if (!$bTypeChanged && $iCurrentApprover > 0) { return; }
+
+    // Default-Genehmiger aus dem Typ lesen
+    $oType = MetaModel::GetObject('OrderRequestType', $iTypeId, false);
+    if (!$oType) { return; }
+    $iDefault = (int) $oType->Get('default_approver_id');
+
+    if ($iDefault > 0) {
+        $this->Set('technical_approver_id', $iDefault);
+    } else {
+        // Wenn der Typ keinen Default hat und der Typ gerade geändert wurde: Feld leeren
+        if ($bTypeChanged) {
+            $this->Set('technical_approver_id', null);
+        }
+    }
+}
+        ]]></code>
+                </method>
+                <method id="EvtHideSubmitIfNoItems">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtHideSubmitIfNoItems(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    if ($this->Get('status') !== 'draft') { return; }
+
+    $iId = (int) $this->GetKey();
+    $iCount = 0;
+    if ($iId > 0) {
+        $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
+        $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
+        $iCount = $oSet->Count();
+    }
+
+    if ($iCount < 1) {
+        $this->DenyTransition('ev_submit');
+    }
+}
+        ]]></code>
+                </method>
+                <method id="EvtHideTotalOnCreate">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtHideTotalOnCreate(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    $this->ForceInitialAttributeFlags('estimated_total_cost', OPT_ATT_HIDDEN);
+}
+        ]]></code>
+                </method>
+                <method id="EvtMakeTotalReadonly">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtMakeTotalReadonly(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    $this->ForceAttributeFlags('estimated_total_cost', OPT_ATT_READONLY);
+}
+        ]]></code>
+                </method>
+                <method id="EvtCheckMinOneItemOnSubmit">
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtCheckMinOneItemOnSubmit(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    $sStimulus = (string) $oEventData->Get('stimulus_applied');
+    if ($sStimulus !== 'ev_submit') { return; }
+
+    $iId = (int) $this->GetKey();
+    $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
+    $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
+    $iCount = $oSet->Count();
+
+    if ($iCount < 1) {
+        $this->AddCheckIssues(Dict::S('Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'));
+    }
+}
+        ]]></code>
+                </method>
+                <method id="EvtComputeEstimatedTotalCost">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>protected</access>
+                    <code><![CDATA[
+public function EvtComputeEstimatedTotalCost(?Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    $fSum = 0.0;
+    /** @var DBObjectSet $oSet */
+    $oSet = $this->Get('line_items');
+    while($oItem = $oSet->Fetch())
+    {
+        $qty   = (int)($oItem->Get('quantity') ?: 0);
+        $unit  = (float)($oItem->Get('unit_price_estimated') ?: 0);
+        $total = $oItem->Get('total_price_estimated');
+        if ($total === null || $total === '')
+        {
+            $total = $qty * $unit;
+        }
+        $fSum += (float)$total;
+    }
+    $this->Set('estimated_total_cost', $fSum);
+}
+        ]]></code>
+                </method>
+                <method id="EvtRecalcBeforeWrite">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    // Nur wenn die LinkedSet-Liste geändert wurde, neu summieren
+    $aChanges = $this->ListChanges();
+    if (array_key_exists('line_items', $aChanges)) {
+        $this->EvtComputeEstimatedTotalCost(null);
+    }
+}
+        ]]></code>
+                </method>
+                <method id="OnInsert">
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+							public function OnInsert()
+							{
+								parent::OnInsert();
+								$this->Set('last_update', time());
+							}
+					]]></code>
+                </method>
+                <method id="OnUpdate">
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+							public function OnUpdate()
+							{
+								parent::OnUpdate();
+								$this->Set('last_update', time());
+							}
+					]]></code>
+                </method>
+                <method id="PrefillCreationForm">
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+							public function PrefillCreationForm(&$aContextParam)
+							{
+							    if (empty($this->Get('start_date')))
+							    {
+							        $this->Set('start_date', time());
+							    }
+							}
+						]]></code>
+                    <arguments>
+                        <argument id="1">
+                            <mandatory>false</mandatory>
+                            <type>attcode</type>
+                        </argument>
+                    </arguments>
+                </method>
+                <method id="GetTicketRefFormat">
+                    <static>true</static>
+                    <access>public</access>
+                    <code><![CDATA[
+							public static function GetTicketRefFormat()
+							{
+								return 'OR-%06d';
+							}
+						]]></code>
+                </method>
+            </methods>
+            <presentation>
+                <details>
+                    <items>
+                        <item id="line_items">
+                            <rank>10</rank>
+                        </item>
+                        <item id="functionalcis_list">
+                            <rank>20</rank>
+                        </item>
+                        <item id="contacts_list">
+                            <rank>30</rank>
+                        </item>
+                        <item id="related_request_list">
+                            <rank>40</rank>
+                        </item>
+                        <item id="col:col1">
+                            <rank>50</rank>
+                            <items>
+                                <item id="fieldset:Ticket:baseinfo">
+                                    <rank>10</rank>
+                                    <items>
+                                        <item id="org_id">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="caller_id">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="status">
+                                            <rank>30</rank>
+                                        </item>
+                                        <item id="request_type_id">
+                                            <rank>40</rank>
+                                        </item>
+                                        <item id="title">
+                                            <rank>50</rank>
+                                        </item>
+                                        <item id="description">
+                                            <rank>60</rank>
+                                        </item>
+                                        <item id="business_justification">
+                                            <rank>70</rank>
+                                        </item>
+                                        <item id="estimated_total_cost">
+                                            <rank>80</rank>
+                                        </item>
+                                        <item id="technical_approver_id">
+                                            <rank>90</rank>
+                                        </item>
+                                        <item id="approved_by_id">
+                                            <rank>100</rank>
+                                        </item>
+                                        <item id="procurement_reference">
+                                            <rank>110</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                            </items>
+                        </item>
+                        <item id="col:col2">
+                            <rank>60</rank>
+                            <items>
+                                <item id="fieldset:Ticket:date">
+                                    <rank>30</rank>
+                                    <items>
+                                        <item id="start_date">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="last_update">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="approval_date">
+                                            <rank>30</rank>
+                                        </item>
+                                        <item id="close_date">
+                                            <rank>80</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                            </items>
+                        </item>
+                        <item id="col:col3">
+                            <rank>70</rank>
+                            <items>
+                                <item id="fieldset:Ticket:relation">
+                                    <rank>10</rank>
+                                    <items>
+                                        <item id="parent_request_id">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="parent_incident_id">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="parent_problem_id">
+                                            <rank>30</rank>
+                                        </item>
+                                        <item id="parent_change_id">
+                                            <rank>40</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                            </items>
+                        </item>
+                        <item id="public_log">
+                            <rank>100</rank>
+                        </item>
+                        <item id="private_log">
+                            <rank>110</rank>
+                        </item>
+                    </items>
+                </details>
+                <search>
+                    <items>
+                        <item id="ref">
+                            <rank>10</rank>
+                        </item>
+                        <item id="org_id">
+                            <rank>20</rank>
+                        </item>
+                        <item id="title">
+                            <rank>30</rank>
+                        </item>
+                        <item id="description">
+                            <rank>40</rank>
+                        </item>
+                        <item id="start_date">
+                            <rank>50</rank>
+                        </item>
+                        <item id="business_justification">
+                            <rank>60</rank>
+                        </item>
+                        <item id="close_date">
+                            <rank>80</rank>
+                        </item>
+                        <item id="status">
+                            <rank>90</rank>
+                        </item>
+                        <item id="operational_status">
+                            <rank>95</rank>
+                        </item>
+                        <item id="caller_id">
+                            <rank>100</rank>
+                        </item>
+                        <item id="team_id">
+                            <rank>180</rank>
+                        </item>
+                        <item id="agent_id">
+                            <rank>190</rank>
+                        </item>
+                        <item id="approved_by_id" />
+                        <item id="approval_date" />
+                    </items>
+                </search>
+                <list>
+                    <items>
+                        <item id="title">
+                            <rank>10</rank>
+                        </item>
+                        <item id="org_id">
+                            <rank>20</rank>
+                        </item>
+                        <item id="caller_id">
+                            <rank>30</rank>
+                        </item>
+                        <item id="start_date">
+                            <rank>40</rank>
+                        </item>
+                        <item id="status">
+                            <rank>50</rank>
+                        </item>
+                        <item id="agent_id">
+                            <rank>60</rank>
+                        </item>
+                    </items>
+                </list>
+            </presentation>
+        </class>
+        <class id="OrderRequestLineItem" _delta="define">
+            <parent>cmdbAbstractObject</parent>
+            <properties>
+                <category>bizmodel,searchable,application</category>
+                <abstract>false</abstract>
+                <key_type>autoincrement</key_type>
+                <db_table>orderrequestlineitem</db_table>
+                <db_key_field>id</db_key_field>
+                <db_final_class_field />
+                <naming>
+                    <attributes>
+                        <attribute id="name" />
+                    </attributes>
+                </naming>
+                <uniqueness_rules>
+                    <rule id="unique_per_order_and_line">
+                        <attributes>
+                            <attribute id="order_request_id" />
+                            <attribute id="line_number" />
+                        </attributes>
+                    </rule>
+                </uniqueness_rules>
+            </properties>
+            <fields>
+                <field id="order_request_id" xsi:type="AttributeExternalKey">
+                    <sql>order_request_id</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                    <target_class>OrderRequest</target_class>
+                    <on_target_delete>DEL_AUTO</on_target_delete>
+                </field>
+                <field id="order_request_ref" xsi:type="AttributeExternalField">
+                    <extkey_attcode>order_request_id</extkey_attcode>
+                    <target_attcode>ref</target_attcode>
+                </field>
+                <field id="line_number" xsi:type="AttributeInteger">
+                    <sql>line_number</sql>
+                    <default_value>1</default_value>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="name" xsi:type="AttributeString">
+                    <sql>name</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                    <default_value />
+                </field>
+                <field id="description" xsi:type="AttributeHTML">
+                    <sql>description</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="quantity" xsi:type="AttributeInteger">
+                    <sql>quantity</sql>
+                    <default_value>1</default_value>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="uom" xsi:type="AttributeString">
+                    <sql>uom</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="unit_price_estimated" xsi:type="AttributeDecimal">
+                    <sql>unit_price_estimated</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                    <digits>12</digits>
+                    <decimals>2</decimals>
+                </field>
+                <field id="total_price_estimated" xsi:type="AttributeDecimal">
+                    <sql>total_price_estimated</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                    <digits>12</digits>
+                    <decimals>2</decimals>
+                    <dependencies>
+                        <attribute id="quantity" />
+                        <attribute id="unit_price_estimated" />
+                    </dependencies>
+                </field>
+            </fields>
+            <event_listeners>
+                <!-- Werte aus eigenen Feldern berechnen -->
+                <event_listener id="ComputeTotals">
+                    <event>EVENT_DB_COMPUTE_VALUES</event>
+                    <callback>EvtComputeTotals</callback>
+                    <rank>10</rank>
+                </event_listener>
+            </event_listeners>
+            <methods>
+                <method id="EvtComputeTotals">
+                    <type>EventListener</type>
+                    <static>false</static>
+                    <access>public</access>
+                    <code><![CDATA[
+public function EvtComputeTotals(Combodo\iTop\Service\Events\EventData $oEventData)
+{
+    $qty  = (int)($this->Get('quantity') ?: 0);
+    $unit = (float)($this->Get('unit_price_estimated') ?: 0);
+    $this->Set('total_price_estimated', $qty * $unit);
+}
+        ]]></code>
+                </method>
+            </methods>
+            <presentation>
+                <details>
+                    <items>
+                        <item id="col:col0">
+                            <items>
+                                <item id="order_request_id" />
+                                <item id="line_number" />
+                                <item id="name" />
+                                <item id="quantity" />
+                                <item id="uom" />
+                                <item id="unit_price_estimated" />
+                                <item id="total_price_estimated" />
+                                <item id="description" />
+                            </items>
+                        </item>
+                    </items>
+                </details>
+                <list>
+                    <items>
+                        <item id="order_request_id" />
+                        <item id="line_number" />
+                        <item id="name" />
+                        <item id="quantity" />
+                        <item id="uom" />
+                        <item id="unit_price_estimated" />
+                        <item id="total_price_estimated" />
+                    </items>
+                </list>
+                <search>
+                    <items>
+                        <item id="order_request_id" />
+                        <item id="line_number" />
+                        <item id="name" />
+                        <item id="quantity" />
+                        <item id="uom" />
+                        <item id="unit_price_estimated" />
+                        <item id="total_price_estimated" />
+                    </items>
+                </search>
+            </presentation>
+        </class>
+        <!-- ***************** Typology ***************** -->
+        <class id="OrderRequestType" _delta="define">
+            <parent>cmdbAbstractObject</parent>
+            <properties>
+                <category>bizmodel,searchable,application</category>
+                <abstract>false</abstract>
+                <key_type>autoincrement</key_type>
+                <db_table>orderrequesttype</db_table>
+                <db_key_field>id</db_key_field>
+                <db_final_class_field />
+                <naming>
+                    <attributes>
+                        <attribute id="name" />
+                    </attributes>
+                </naming>
+                <uniqueness_rules>
+                    <rule id="unique_code">
+                        <attributes>
+                            <attribute id="org_id" />
+                            <attribute id="code" />
+                        </attributes>
+                        <is_blocking>true</is_blocking>
+                    </rule>
+                </uniqueness_rules>
+                <fields_semantic>
+                    <state_attribute>status</state_attribute>
+                </fields_semantic>
+                <style>
+                    <icon>images/TODO.png</icon>
+                </style>
+                <reconciliation>
+                    <attributes>
+                        <attribute id="code" />
+                        <attribute id="name" />
+                        <attribute id="org_id" />
+                        <attribute id="org_name" />
+                    </attributes>
+                </reconciliation>
+            </properties>
+            <fields>
+                <field id="org_id" xsi:type="AttributeExternalKey">
+                    <sql>org_id</sql>
+                    <target_class>Organization</target_class>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_AUTO</on_target_delete>
+                </field>
+                <field id="org_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>org_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="name" xsi:type="AttributeString">
+                    <sql>name</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="code" xsi:type="AttributeString">
+                    <sql>code</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="description" xsi:type="AttributeHTML">
+                    <sql>description</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="default_approver_id" xsi:type="AttributeExternalKey">
+                    <sql>default_approver_id</sql>
+                    <target_class>Person</target_class>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                    <dependencies>
+                        <attribute id="org_id" />
+                    </dependencies>
+                </field>
+                <field id="default_approver_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>default_approver_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="status" xsi:type="AttributeEnum">
+                    <sql>status</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                    <default_value>active</default_value>
+                    <values>
+                        <value id="active">
+                            <code>active</code>
+                            <rank>10</rank>
+                        </value>
+                        <value id="inactive">
+                            <code>inactive</code>
+                            <rank>20</rank>
+                        </value>
+                    </values>
+                    <sort_type>rank</sort_type>
+                    <display_style>list</display_style>
+                </field>
+                <field id="requires_budget_owner_approval" xsi:type="AttributeBoolean">
+                    <sql>requires_budget_owner_approval</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                    <default_value>no</default_value>
+                </field>
+            </fields>
+            <methods />
+            <presentation>
+                <details>
+                    <items>
+                        <item id="name" />
+                        <item id="code" />
+                        <item id="org_id" />
+                        <item id="status" />
+                        <item id="requires_budget_owner_approval" />
+                        <item id="default_approver_id" />
+                        <item id="description" />
+                    </items>
+                </details>
+                <search>
+                    <items>
+                        <item id="name" />
+                        <item id="code" />
+                        <item id="org_id" />
+                        <item id="status" />
+                        <item id="requires_budget_owner_approval" />
+                        <item id="default_approver_id" />
+                        <item id="description" />
+                    </items>
+                </search>
+                <list>
+                    <items>
+                        <item id="name" />
+                        <item id="code" />
+                        <item id="org_id" />
+                        <item id="status" />
+                        <item id="requires_budget_owner_approval" />
+                        <item id="default_approver_id" />
+                    </items>
+                </list>
+                <summary>
+                    <items>
+                        <item id="code" />
+                        <item id="org_id" />
+                    </items>
+                </summary>
+            </presentation>
+        </class>
+    </classes>
+    <!-- ***************** Menus ***************** -->
+    <menus>
+        <menu id="OrderRequest" xsi:type="MenuGroup" _delta="define">
+            <rank>80</rank>
+            <style>
+                <decoration_classes>fas fa-shopping-cart</decoration_classes>
+            </style>
+            <enable_class>OrderRequestType</enable_class>
+            <enable_admin_only>0</enable_admin_only>
+        </menu>
+        <menu id="OrderRequestSpace" xsi:type="DashboardMenuNode" _delta="define">
+            <rank>0</rank>
+            <parent>OrderRequest</parent>
+            <enable_class>OrderRequestType</enable_class>
+            <enable_action>UR_ACTION_READ</enable_action>
+            <definition>
+                <layout>DashboardLayoutOneCol</layout>
+                <title />
+                <cells>
+                    <cell id="banf-100">
+                        <rank>1</rank>
+                        <dashlets>
+                            <dashlet id="banf-101" xsi:type="DashletHeaderStatic">
+                                <rank>101</rank>
+                                <title>Menu:OrderRequestSpace:XXX</title>
+                            </dashlet>
+                            <dashlet id="banf-110" xsi:type="DashletBadge">
+                                <rank>110</rank>
+                                <class>OrderRequest</class>
+                            </dashlet>
+                            <dashlet id="banf-120" xsi:type="DashletBadge">
+                                <rank>120</rank>
+                                <class>OrderRequestType</class>
+                            </dashlet>
+                        </dashlets>
+                    </cell>
+                </cells>
+            </definition>
+        </menu>
+    </menus>
+</itop_design>

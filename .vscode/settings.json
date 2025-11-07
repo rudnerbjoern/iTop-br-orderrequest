@@ -22,6 +22,9 @@
         "providercontracts",
         "serialnumber"
     ],
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "editor.formatOnPaste": true,
     "xml.codeLens.enabled": true,
     "xml.format.emptyElements": "collapse",
     "xml.format.maxLineWidth": 0,

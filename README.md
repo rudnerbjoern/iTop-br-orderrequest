@@ -1,7 +1,7 @@
-# iTop-br-template
+# iTop-br-orderrequest
 
 Copyright (c) 2025 Björn Rudner
-[![License](https://img.shields.io/github/license/rudnerbjoern/iTop-br-TODO)](https://github.com/rudnerbjoern/iTop-br-TODO/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/rudnerbjoern/iTop-br-orderrequest)](https://github.com/rudnerbjoern/iTop-br-orderrequest/blob/main/LICENSE)
 
 ## What?
 

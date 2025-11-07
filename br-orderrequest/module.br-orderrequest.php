@@ -10,17 +10,18 @@
 /** @disregard P1009 Undefined type SetupWebPage */
 SetupWebPage::AddModule(
     __FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-    'br-TODO/0.0.1',
+    'br-orderrequest/0.0.1',
     array(
         // Identification
         //
-        'label' => 'Datamodel: TODO',
+        'label' => 'DDatamodel: Order Request',
         'category' => 'business',
 
         // Setup
         //
         'dependencies' => array(
             'itop-config-mgmt/3.1.0',
+            'itop-service-mgmt/3.2.0',
         ),
         'mandatory' => false,
         'visible' => true,

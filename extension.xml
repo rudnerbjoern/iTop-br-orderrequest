@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension format="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://rudnerbjoern.github.io/iTop-schema/extension.xsd">
     <extension_code>
-        <![CDATA[br-TODO]]>
+        <![CDATA[iTop-br-orderrequest]]>
     </extension_code>
     <company>
         <![CDATA[]]>
@@ -10,10 +10,10 @@
         <![CDATA[Björn Rudner]]>
     </author>
     <label>
-        <![CDATA[Datamodel: TODO]]>
+        <![CDATA[Datamodel: Order Request]]>
     </label>
     <description>
-        <![CDATA[TODO]]>
+        <![CDATA[Extension for handling order Requests in iTop. Adds a new class 'Order Request' to manage and track orders efficiently within the iTop system.]]>
     </description>
     <version>0.0.1</version>
     <release_date>2025-06-01</release_date>
@@ -21,5 +21,5 @@
     <itop_version_min>3.2.0</itop_version_min>
     <status>stable</status>
     <mandatory>false</mandatory>
-    <more_info_url>https://github.com/rudnerbjoern/iTop-br-TODO/blob/main/README.md</more_info_url>
+    <more_info_url>https://github.com/rudnerbjoern/iTop-br-orderrequest/blob/main/README.md</more_info_url>
 </extension>
