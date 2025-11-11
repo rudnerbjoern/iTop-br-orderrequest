@@ -7,6 +7,10 @@
     <classes>
         <class id="OrderRequest" _delta="define">
             <parent>Ticket</parent>
+            <php_parent>
+                <name>BR\Extension\OrderRequest\Model\_OrderRequest</name>
+                <file>src/Model/_OrderRequest.php</file>
+            </php_parent>
             <properties>
                 <category>bizmodel,searchable,requestmgmt</category>
                 <abstract>false</abstract>
@@ -23,7 +27,7 @@
                     </complementary_attributes>
                 </naming>
                 <style>
-                    <icon>images/TODO.svg</icon>
+                    <icon>images/orderrequest.svg</icon>
                 </style>
                 <reconciliation>
                     <attributes>
@@ -122,15 +126,20 @@
                     <extkey_attcode>approved_by_id</extkey_attcode>
                     <target_attcode>name</target_attcode>
                 </field>
+                <field id="approval_comment" xsi:type="AttributeHTML">
+                    <sql>approval_comment</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="approval_request_date" xsi:type="AttributeDateTime">
+                    <sql>approval_request_date</sql>
+                    <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
                 <field id="approval_date" xsi:type="AttributeDateTime">
                     <sql>approval_date</sql>
                     <default_value />
                     <is_null_allowed>true</is_null_allowed>
-                </field>
-                <field id="business_justification" xsi:type="AttributeHTML">
-                    <sql>business_justification</sql>
-                    <default_value />
-                    <is_null_allowed>false</is_null_allowed>
                 </field>
                 <field id="procurement_reference" xsi:type="AttributeString">
                     <sql>procurement_reference</sql>
@@ -201,11 +210,6 @@
                     <count_min>0</count_min>
                     <count_max>0</count_max>
                 </field>
-                <field id="public_log" xsi:type="AttributeCaseLog">
-                    <sql>public_log</sql>
-                    <default_value />
-                    <is_null_allowed>true</is_null_allowed>
-                </field>
             </fields>
             <lifecycle>
                 <stimuli>
@@ -226,14 +230,23 @@
                             <attribute id="start_date">
                                 <read_only />
                             </attribute>
+                            <attribute id="approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approved_by_id">
+                                <read_only />
+                            </attribute>
                             <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_comment">
                                 <read_only />
                             </attribute>
                             <attribute id="end_date">
                                 <hidden />
                             </attribute>
                             <attribute id="last_update">
-                                <hidden />
+                                <read_only />
                             </attribute>
                             <attribute id="close_date">
                                 <hidden />
@@ -271,7 +284,7 @@
                                 <read_only />
                                 <mandatory />
                             </attribute>
-                            <attribute id="business_justification">
+                            <attribute id="description">
                                 <read_only />
                                 <mandatory />
                             </attribute>
@@ -297,17 +310,31 @@
                             <transition id="ev_request_approval">
                                 <target>waiting_approval</target>
                                 <flags />
-                                <actions />
+                                <actions>
+                                    <action id="set-approval-req-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">approval_request_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
                             </transition>
                         </transitions>
                     </state>
                     <state id="waiting_approval">
                         <inherit_flags_from>submitted</inherit_flags_from>
-                        <flags />
+                        <flags>
+                            <attribute id="approval_comment" />
+                        </flags>
                         <transitions>
                             <transition id="ev_approve">
                                 <target>approved</target>
-                                <flags />
+                                <flags>
+                                    <attribute id="approval_comment">
+                                        <mandatory />
+                                        <must_prompt />
+                                    </attribute>
+                                </flags>
                                 <actions>
                                     <action id="set-approver">
                                         <verb>SetCurrentPerson</verb>
@@ -326,7 +353,20 @@
                             <transition id="ev_reject">
                                 <target>rejected</target>
                                 <flags />
-                                <actions />
+                                <actions>
+                                    <action id="set-reject-by">
+                                        <verb>SetCurrentPerson</verb>
+                                        <params>
+                                            <param xsi:type="string">approved_by_id</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-reject-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">approval_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
                             </transition>
                         </transitions>
                     </state>
@@ -378,255 +418,49 @@
                     </state>
                 </states>
             </lifecycle>
-            <!-- Events & Methoden: Summe auf dem Parent pflegen -->
             <event_listeners>
-                <event_listener id="HideSubmitIfNoItems">
-                    <event>EVENT_ENUM_TRANSITIONS</event>
-                    <callback>EvtHideSubmitIfNoItems</callback>
-                    <rank>10</rank>
-                </event_listener>
-                <!-- Wenn Positionen geändert/neu/gelöscht werden -->
-                <event_listener id="RecalcOnLinksChanged">
-                    <event>EVENT_DB_LINKS_CHANGED</event>
-                    <callback>EvtComputeEstimatedTotalCost</callback>
-                    <rank>10</rank>
-                </event_listener>
-                <event_listener id="SyncTechnicalApproverOnCompute">
-                    <event>EVENT_DB_COMPUTE_VALUES</event>
-                    <callback>EvtSyncTechnicalApprover</callback>
-                    <rank>10</rank>
-                </event_listener>
-                <!-- Wenn im gleichen Formular die LinkedSet-Liste editiert wird -->
-                <event_listener id="RecalcBeforeWrite">
-                    <event>EVENT_DB_BEFORE_WRITE</event>
-                    <callback>EvtRecalcBeforeWrite</callback>
-                    <rank>20</rank>
-                </event_listener>
-                <event_listener id="CheckMinOneItemOnSubmit">
-                    <event>EVENT_DB_CHECK_TO_WRITE</event>
-                    <callback>EvtCheckMinOneItemOnSubmit</callback>
-                    <rank>30</rank>
-                </event_listener>
-                <!-- Optional: Feld auf Neu verstecken, auf Edit readonly -->
-                <event_listener id="HideTotalOnCreate">
+                <event_listener id="OnOrderRequestSetInitialAttributesFlags">
                     <event>EVENT_DB_SET_INITIAL_ATTRIBUTES_FLAGS</event>
-                    <callback>EvtHideTotalOnCreate</callback>
-                    <rank>5</rank>
+                    <callback>OnOrderRequestSetInitialAttributesFlags</callback>
+                    <rank>10</rank>
                 </event_listener>
-                <event_listener id="MakeTotalReadonly">
+                <event_listener id="OnOrderRequestSetAttributesFlags">
                     <event>EVENT_DB_SET_ATTRIBUTES_FLAGS</event>
-                    <callback>EvtMakeTotalReadonly</callback>
-                    <rank>5</rank>
+                    <callback>OnOrderRequestSetAttributesFlags</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestEnumTransitions">
+                    <event>EVENT_ENUM_TRANSITIONS</event>
+                    <callback>OnOrderRequestEnumTransitions</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestLinksChanged">
+                    <event>EVENT_DB_LINKS_CHANGED</event>
+                    <callback>OnOrderRequestLinksChanged</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestComputeValues">
+                    <event>EVENT_DB_COMPUTE_VALUES</event>
+                    <callback>OnOrderRequestComputeValues</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestCheckToWrite">
+                    <event>EVENT_DB_CHECK_TO_WRITE</event>
+                    <callback>OnOrderRequestCheckToWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestBeforeWrite">
+                    <event>EVENT_DB_BEFORE_WRITE</event>
+                    <callback>OnOrderRequestBeforeWrite</callback>
+                    <rank>10</rank>
                 </event_listener>
             </event_listeners>
-            <methods>
-                <method id="EvtSyncTechnicalApprover">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtSyncTechnicalApprover(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    // Wenn kein Typ gesetzt ist, nichts tun
-    $iTypeId = (int) $this->Get('request_type_id');
-    if ($iTypeId <= 0) { return; }
-
-    // Nur setzen, wenn leer ODER Typ soeben geändert wurde
-    $aChanges = $this->ListChanges();
-    $bTypeChanged = array_key_exists('request_type_id', $aChanges);
-    $iCurrentApprover = (int) $this->Get('technical_approver_id');
-    if (!$bTypeChanged && $iCurrentApprover > 0) { return; }
-
-    // Default-Genehmiger aus dem Typ lesen
-    $oType = MetaModel::GetObject('OrderRequestType', $iTypeId, false);
-    if (!$oType) { return; }
-    $iDefault = (int) $oType->Get('default_approver_id');
-
-    if ($iDefault > 0) {
-        $this->Set('technical_approver_id', $iDefault);
-    } else {
-        // Wenn der Typ keinen Default hat und der Typ gerade geändert wurde: Feld leeren
-        if ($bTypeChanged) {
-            $this->Set('technical_approver_id', null);
-        }
-    }
-}
-        ]]></code>
-                </method>
-                <method id="EvtHideSubmitIfNoItems">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtHideSubmitIfNoItems(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    if ($this->Get('status') !== 'draft') { return; }
-
-    $iId = (int) $this->GetKey();
-    $iCount = 0;
-    if ($iId > 0) {
-        $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
-        $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
-        $iCount = $oSet->Count();
-    }
-
-    if ($iCount < 1) {
-        $this->DenyTransition('ev_submit');
-    }
-}
-        ]]></code>
-                </method>
-                <method id="EvtHideTotalOnCreate">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtHideTotalOnCreate(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    $this->ForceInitialAttributeFlags('estimated_total_cost', OPT_ATT_HIDDEN);
-}
-        ]]></code>
-                </method>
-                <method id="EvtMakeTotalReadonly">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtMakeTotalReadonly(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    $this->ForceAttributeFlags('estimated_total_cost', OPT_ATT_READONLY);
-}
-        ]]></code>
-                </method>
-                <method id="EvtCheckMinOneItemOnSubmit">
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtCheckMinOneItemOnSubmit(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    $sStimulus = (string) $oEventData->Get('stimulus_applied');
-    if ($sStimulus !== 'ev_submit') { return; }
-
-    $iId = (int) $this->GetKey();
-    $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
-    $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
-    $iCount = $oSet->Count();
-
-    if ($iCount < 1) {
-        $this->AddCheckIssues(Dict::S('Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'));
-    }
-}
-        ]]></code>
-                </method>
-                <method id="EvtComputeEstimatedTotalCost">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>protected</access>
-                    <code><![CDATA[
-public function EvtComputeEstimatedTotalCost(?Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    $fSum = 0.0;
-    /** @var DBObjectSet $oSet */
-    $oSet = $this->Get('line_items');
-    while($oItem = $oSet->Fetch())
-    {
-        $qty   = (int)($oItem->Get('quantity') ?: 0);
-        $unit  = (float)($oItem->Get('unit_price_estimated') ?: 0);
-        $total = $oItem->Get('total_price_estimated');
-        if ($total === null || $total === '')
-        {
-            $total = $qty * $unit;
-        }
-        $fSum += (float)$total;
-    }
-    $this->Set('estimated_total_cost', $fSum);
-}
-        ]]></code>
-                </method>
-                <method id="EvtRecalcBeforeWrite">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    // Nur wenn die LinkedSet-Liste geändert wurde, neu summieren
-    $aChanges = $this->ListChanges();
-    if (array_key_exists('line_items', $aChanges)) {
-        $this->EvtComputeEstimatedTotalCost(null);
-    }
-}
-        ]]></code>
-                </method>
-                <method id="OnInsert">
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-							public function OnInsert()
-							{
-								parent::OnInsert();
-								$this->Set('last_update', time());
-							}
-					]]></code>
-                </method>
-                <method id="OnUpdate">
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-							public function OnUpdate()
-							{
-								parent::OnUpdate();
-								$this->Set('last_update', time());
-							}
-					]]></code>
-                </method>
-                <method id="PrefillCreationForm">
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-							public function PrefillCreationForm(&$aContextParam)
-							{
-							    if (empty($this->Get('start_date')))
-							    {
-							        $this->Set('start_date', time());
-							    }
-							}
-						]]></code>
-                    <arguments>
-                        <argument id="1">
-                            <mandatory>false</mandatory>
-                            <type>attcode</type>
-                        </argument>
-                    </arguments>
-                </method>
-                <method id="GetTicketRefFormat">
-                    <static>true</static>
-                    <access>public</access>
-                    <code><![CDATA[
-							public static function GetTicketRefFormat()
-							{
-								return 'OR-%06d';
-							}
-						]]></code>
-                </method>
-            </methods>
+            <methods />
             <presentation>
                 <details>
                     <items>
-                        <item id="line_items">
+                        <item id="col:col0">
                             <rank>10</rank>
-                        </item>
-                        <item id="functionalcis_list">
-                            <rank>20</rank>
-                        </item>
-                        <item id="contacts_list">
-                            <rank>30</rank>
-                        </item>
-                        <item id="related_request_list">
-                            <rank>40</rank>
-                        </item>
-                        <item id="col:col1">
-                            <rank>50</rank>
                             <items>
                                 <item id="fieldset:Ticket:baseinfo">
                                     <rank>10</rank>
@@ -649,49 +483,62 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                                         <item id="description">
                                             <rank>60</rank>
                                         </item>
-                                        <item id="business_justification">
-                                            <rank>70</rank>
-                                        </item>
-                                        <item id="estimated_total_cost">
-                                            <rank>80</rank>
-                                        </item>
+                                    </items>
+                                </item>
+                                <item id="fieldset:OrderRequest:approval">
+                                    <rank>20</rank>
+                                    <items>
                                         <item id="technical_approver_id">
-                                            <rank>90</rank>
+                                            <rank>10</rank>
                                         </item>
                                         <item id="approved_by_id">
-                                            <rank>100</rank>
+                                            <rank>20</rank>
                                         </item>
-                                        <item id="procurement_reference">
-                                            <rank>110</rank>
+                                        <item id="approval_comment">
+                                            <rank>30</rank>
                                         </item>
                                     </items>
                                 </item>
                             </items>
                         </item>
-                        <item id="col:col2">
-                            <rank>60</rank>
+                        <item id="col:col1">
+                            <rank>20</rank>
                             <items>
+                                <item id="fieldset:OrderRequest:costs">
+                                    <rank>10</rank>
+                                    <items>
+                                        <item id="estimated_total_cost">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="procurement_reference">
+                                            <rank>20</rank>
+                                        </item>
+                                    </items>
+                                </item>
                                 <item id="fieldset:Ticket:date">
-                                    <rank>30</rank>
+                                    <rank>20</rank>
                                     <items>
                                         <item id="start_date">
                                             <rank>10</rank>
                                         </item>
-                                        <item id="last_update">
+                                        <item id="approval_request_date">
                                             <rank>20</rank>
                                         </item>
                                         <item id="approval_date">
                                             <rank>30</rank>
                                         </item>
                                         <item id="close_date">
-                                            <rank>80</rank>
+                                            <rank>40</rank>
+                                        </item>
+                                        <item id="last_update">
+                                            <rank>50</rank>
                                         </item>
                                     </items>
                                 </item>
                             </items>
                         </item>
-                        <item id="col:col3">
-                            <rank>70</rank>
+                        <item id="col:col2">
+                            <rank>30</rank>
                             <items>
                                 <item id="fieldset:Ticket:relation">
                                     <rank>10</rank>
@@ -712,11 +559,20 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                                 </item>
                             </items>
                         </item>
-                        <item id="public_log">
+                        <item id="line_items">
                             <rank>100</rank>
                         </item>
-                        <item id="private_log">
+                        <item id="functionalcis_list">
                             <rank>110</rank>
+                        </item>
+                        <item id="contacts_list">
+                            <rank>120</rank>
+                        </item>
+                        <item id="related_request_list">
+                            <rank>130</rank>
+                        </item>
+                        <item id="private_log">
+                            <rank>200</rank>
                         </item>
                     </items>
                 </details>
@@ -725,69 +581,105 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                         <item id="ref">
                             <rank>10</rank>
                         </item>
-                        <item id="org_id">
+                        <item id="title">
                             <rank>20</rank>
                         </item>
-                        <item id="title">
+                        <item id="org_id">
                             <rank>30</rank>
                         </item>
-                        <item id="description">
+                        <item id="caller_id">
                             <rank>40</rank>
                         </item>
-                        <item id="start_date">
+                        <item id="request_type_name" _delta="define">
                             <rank>50</rank>
                         </item>
-                        <item id="business_justification">
+                        <item id="status">
                             <rank>60</rank>
                         </item>
-                        <item id="close_date">
+                        <item id="technical_approver_id">
+                            <rank>70</rank>
+                        </item>
+                        <item id="approved_by_id">
                             <rank>80</rank>
                         </item>
-                        <item id="status">
+                        <item id="approval_date">
                             <rank>90</rank>
                         </item>
-                        <item id="operational_status">
-                            <rank>95</rank>
-                        </item>
-                        <item id="caller_id">
+                        <item id="procurement_reference">
                             <rank>100</rank>
                         </item>
-                        <item id="team_id">
-                            <rank>180</rank>
+                        <item id="estimated_total_cost">
+                            <rank>110</rank>
+                        </item>
+                        <item id="start_date">
+                            <rank>120</rank>
+                        </item>
+                        <item id="close_date">
+                            <rank>130</rank>
                         </item>
                         <item id="agent_id">
-                            <rank>190</rank>
+                            <rank>140</rank>
                         </item>
-                        <item id="approved_by_id" />
-                        <item id="approval_date" />
+                        <item id="team_id">
+                            <rank>150</rank>
+                        </item>
                     </items>
                 </search>
                 <list>
                     <items>
                         <item id="title">
-                            <rank>10</rank>
-                        </item>
-                        <item id="org_id">
                             <rank>20</rank>
                         </item>
-                        <item id="caller_id">
+                        <item id="request_type_name">
                             <rank>30</rank>
                         </item>
-                        <item id="start_date">
+                        <item id="org_id">
                             <rank>40</rank>
                         </item>
-                        <item id="status">
+                        <item id="caller_id">
                             <rank>50</rank>
                         </item>
-                        <item id="agent_id">
+                        <item id="status">
                             <rank>60</rank>
+                        </item>
+                        <item id="technical_approver_id">
+                            <rank>70</rank>
+                        </item>
+                        <item id="estimated_total_cost">
+                            <rank>80</rank>
+                        </item>
+                        <item id="approval_date">
+                            <rank>90</rank>
+                        </item>
+                        <item id="agent_id">
+                            <rank>100</rank>
                         </item>
                     </items>
                 </list>
+                <summary>
+                    <items>
+                        <item id="title">
+                            <rank>20</rank>
+                        </item>
+                        <item id="request_type_name">
+                            <rank>30</rank>
+                        </item>
+                        <item id="status">
+                            <rank>40</rank>
+                        </item>
+                        <item id="estimated_total_cost">
+                            <rank>50</rank>
+                        </item>
+                    </items>
+                </summary>
             </presentation>
         </class>
         <class id="OrderRequestLineItem" _delta="define">
             <parent>cmdbAbstractObject</parent>
+            <php_parent>
+                <name>BR\Extension\OrderRequest\Model\_OrderRequestLineItem</name>
+                <file>src/Model/_OrderRequestLineItem.php</file>
+            </php_parent>
             <properties>
                 <category>bizmodel,searchable,application</category>
                 <abstract>false</abstract>
@@ -800,6 +692,14 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                         <attribute id="name" />
                     </attributes>
                 </naming>
+                <style>
+                    <icon>images/orderrequestlineitem.svg</icon>
+                </style>
+                <order>
+                    <columns>
+                        <column id="line_number" ascending="true" />
+                    </columns>
+                </order>
                 <uniqueness_rules>
                     <rule id="unique_per_order_and_line">
                         <attributes>
@@ -822,13 +722,17 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                 </field>
                 <field id="line_number" xsi:type="AttributeInteger">
                     <sql>line_number</sql>
-                    <default_value>1</default_value>
+                    <default_value />
                     <is_null_allowed>false</is_null_allowed>
                 </field>
                 <field id="name" xsi:type="AttributeString">
                     <sql>name</sql>
                     <is_null_allowed>false</is_null_allowed>
                     <default_value />
+                </field>
+                <field id="vendor_sku" xsi:type="AttributeString">
+                    <sql>vendor_sku</sql>
+                    <is_null_allowed>true</is_null_allowed>
                 </field>
                 <field id="description" xsi:type="AttributeHTML">
                     <sql>description</sql>
@@ -840,10 +744,42 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                     <default_value>1</default_value>
                     <is_null_allowed>false</is_null_allowed>
                 </field>
-                <field id="uom" xsi:type="AttributeString">
+                <field id="uom" xsi:type="AttributeEnum">
                     <sql>uom</sql>
-                    <default_value />
+                    <values _delta="redefine">
+                        <value id="EA">
+                            <code>EA</code>
+                            <rank>10</rank>
+                        </value>   <!-- each / Stück -->
+                        <value id="PT">
+                            <code>PT</code>
+                            <rank>20</rank>
+                        </value>   <!-- Personentag -->
+                        <value id="HUR">
+                            <code>HUR</code>
+                            <rank>30</rank>
+                        </value> <!-- hour -->
+                        <value id="LIC">
+                            <code>LIC</code>
+                            <rank>40</rank>
+                        </value> <!-- license -->
+                        <value id="SET">
+                            <code>SET</code>
+                            <rank>50</rank>
+                        </value> <!-- set -->
+                        <value id="MON">
+                            <code>MON</code>
+                            <rank>60</rank>
+                        </value> <!-- month -->
+                        <value id="ANN">
+                            <code>ANN</code>
+                            <rank>70</rank>
+                        </value> <!-- year -->
+                    </values>
                     <is_null_allowed>true</is_null_allowed>
+                    <default_value>EA</default_value>
+                    <display_style>list</display_style>
+                    <sort_type>rank</sort_type>
                 </field>
                 <field id="unit_price_estimated" xsi:type="AttributeDecimal">
                     <sql>unit_price_estimated</sql>
@@ -865,67 +801,162 @@ public function EvtRecalcBeforeWrite(Combodo\iTop\Service\Events\EventData $oEve
                 </field>
             </fields>
             <event_listeners>
-                <!-- Werte aus eigenen Feldern berechnen -->
-                <event_listener id="ComputeTotals">
+                <event_listener id="OnLineItemSetInitialAttributesFlags">
+                    <event>EVENT_DB_SET_INITIAL_ATTRIBUTES_FLAGS</event>
+                    <callback>OnLineItemSetInitialAttributesFlags</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnLineItemSetAttributesFlags">
+                    <event>EVENT_DB_SET_ATTRIBUTES_FLAGS</event>
+                    <callback>OnLineItemSetAttributesFlags</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnLineItemComputeValues">
                     <event>EVENT_DB_COMPUTE_VALUES</event>
-                    <callback>EvtComputeTotals</callback>
+                    <callback>OnLineItemComputeValues</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnLineItemCheckToWrite">
+                    <event>EVENT_DB_CHECK_TO_WRITE</event>
+                    <callback>OnLineItemCheckToWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnLineItemBeforeWrite">
+                    <event>EVENT_DB_BEFORE_WRITE</event>
+                    <callback>OnLineItemBeforeWrite</callback>
                     <rank>10</rank>
                 </event_listener>
             </event_listeners>
-            <methods>
-                <method id="EvtComputeTotals">
-                    <type>EventListener</type>
-                    <static>false</static>
-                    <access>public</access>
-                    <code><![CDATA[
-public function EvtComputeTotals(Combodo\iTop\Service\Events\EventData $oEventData)
-{
-    $qty  = (int)($this->Get('quantity') ?: 0);
-    $unit = (float)($this->Get('unit_price_estimated') ?: 0);
-    $this->Set('total_price_estimated', $qty * $unit);
-}
-        ]]></code>
-                </method>
-            </methods>
+            <methods />
             <presentation>
                 <details>
                     <items>
                         <item id="col:col0">
+                            <rank>10</rank>
                             <items>
-                                <item id="order_request_id" />
-                                <item id="line_number" />
-                                <item id="name" />
-                                <item id="quantity" />
-                                <item id="uom" />
-                                <item id="unit_price_estimated" />
-                                <item id="total_price_estimated" />
-                                <item id="description" />
+                                <item id="fieldset:OrderRequestLineItem:base">
+                                    <rank>10</rank>
+                                    <items>
+                                        <item id="order_request_id">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="line_number">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="name">
+                                            <rank>30</rank>
+                                        </item>
+                                        <item id="vendor_sku">
+                                            <rank>40</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                                <item id="fieldset:OrderRequestLineItem:qtyprice">
+                                    <rank>20</rank>
+                                    <items>
+                                        <item id="quantity">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="uom">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="unit_price_estimated">
+                                            <rank>30</rank>
+                                        </item>
+                                        <item id="total_price_estimated">
+                                            <rank>40</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                            </items>
+                        </item>
+                        <item id="col:col1" _delta="define">
+                            <rank>20</rank>
+                            <items>
+                                <item id="fieldset:OrderRequestLineItem:description">
+                                    <rank>10</rank>
+                                    <items>
+                                        <item id="description">
+                                            <rank>10</rank>
+                                        </item>
+                                    </items>
+                                </item>
                             </items>
                         </item>
                     </items>
                 </details>
                 <list>
                     <items>
-                        <item id="order_request_id" />
-                        <item id="line_number" />
-                        <item id="name" />
-                        <item id="quantity" />
-                        <item id="uom" />
-                        <item id="unit_price_estimated" />
-                        <item id="total_price_estimated" />
+                        <item id="order_request_ref">
+                            <rank>5</rank>
+                        </item>
+                        <item id="line_number">
+                            <rank>10</rank>
+                        </item>
+                        <item id="vendor_sku">
+                            <rank>30</rank>
+                        </item>
+                        <item id="quantity">
+                            <rank>40</rank>
+                        </item>
+                        <item id="uom">
+                            <rank>50</rank>
+                        </item>
+                        <item id="unit_price_estimated">
+                            <rank>60</rank>
+                        </item>
+                        <item id="total_price_estimated">
+                            <rank>70</rank>
+                        </item>
                     </items>
                 </list>
                 <search>
                     <items>
-                        <item id="order_request_id" />
-                        <item id="line_number" />
-                        <item id="name" />
-                        <item id="quantity" />
-                        <item id="uom" />
-                        <item id="unit_price_estimated" />
-                        <item id="total_price_estimated" />
+                        <item id="order_request_ref">
+                            <rank>10</rank>
+                        </item>
+                        <item id="line_number">
+                            <rank>20</rank>
+                        </item>
+                        <item id="name">
+                            <rank>30</rank>
+                        </item>
+                        <item id="vendor_sku">
+                            <rank>40</rank>
+                        </item>
+                        <item id="quantity">
+                            <rank>50</rank>
+                        </item>
+                        <item id="uom">
+                            <rank>60</rank>
+                        </item>
+                        <item id="unit_price_estimated">
+                            <rank>70</rank>
+                        </item>
+                        <item id="total_price_estimated">
+                            <rank>80</rank>
+                        </item>
                     </items>
                 </search>
+                <summary>
+                    <items>
+                        <item id="name">
+                            <rank>10</rank>
+                        </item>
+                        <item id="line_number">
+                            <rank>20</rank>
+                        </item>
+                        <item id="quantity">
+                            <rank>30</rank>
+                        </item>
+                        <item id="uom">
+                            <rank>40</rank>
+                        </item>
+                        <item id="total_price_estimated">
+                            <rank>50</rank>
+                        </item>
+                    </items>
+                </summary>
             </presentation>
         </class>
         <!-- ***************** Typology ***************** -->
@@ -956,7 +987,7 @@ public function EvtComputeTotals(Combodo\iTop\Service\Events\EventData $oEventDa
                     <state_attribute>status</state_attribute>
                 </fields_semantic>
                 <style>
-                    <icon>images/TODO.png</icon>
+                    <icon>images/orderrequesttype.svg</icon>
                 </style>
                 <reconciliation>
                     <attributes>
@@ -1053,10 +1084,9 @@ public function EvtComputeTotals(Combodo\iTop\Service\Events\EventData $oEventDa
                 </search>
                 <list>
                     <items>
-                        <item id="name" />
-                        <item id="code" />
                         <item id="org_id" />
                         <item id="status" />
+                        <item id="code" />
                         <item id="requires_budget_owner_approval" />
                         <item id="default_approver_id" />
                     </items>
@@ -1094,7 +1124,7 @@ public function EvtComputeTotals(Combodo\iTop\Service\Events\EventData $oEventDa
                         <dashlets>
                             <dashlet id="banf-101" xsi:type="DashletHeaderStatic">
                                 <rank>101</rank>
-                                <title>Menu:OrderRequestSpace:XXX</title>
+                                <title>Menu:OrderRequestSpace:Header</title>
                             </dashlet>
                             <dashlet id="banf-110" xsi:type="DashletBadge">
                                 <rank>110</rank>

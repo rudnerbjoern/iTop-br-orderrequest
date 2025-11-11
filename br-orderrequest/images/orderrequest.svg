@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" aria-labelledby="title" role="img"
+    xmlns="http://www.w3.org/2000/svg">
+    <title>Order Request</title>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8">
+        <!-- Cart -->
+        <g stroke="#0D9488">
+            <path d="M4 6h2l1.2 8h8.8l2-6H7.3" />
+            <circle cx="10" cy="18" r="1.6" />
+            <circle cx="16" cy="18" r="1.6" />
+        </g>
+        <!-- Approval badge -->
+        <g>
+            <circle cx="18.5" cy="5.5" r="3.2" fill="none" stroke="#22C55E" />
+            <path d="M17.1 5.5l1.1 1.2 2-2" stroke="#22C55E" />
+        </g>
+    </g>
+</svg>

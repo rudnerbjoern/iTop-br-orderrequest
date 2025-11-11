@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" aria-labelledby="title" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>Order Request Line Item - Box and Qty</title>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8">
+        <!-- Box -->
+        <g stroke="#F59E0B">
+            <path d="M5 7l7-3 7 3-7 3-7-3z" />
+            <path d="M5 7v7.5c0 .8.5 1.5 1.2 1.8l5.8 2.7 5.8-2.7c.7-.3 1.2-1 1.2-1.8V7" />
+            <path d="M12 10v9" />
+        </g>
+        <!-- Qty badge (double dots to suggest multiple) -->
+        <g stroke="#3B82F6">
+            <circle cx="18.5" cy="6" r="3.2" />
+            <path d="M17.2 6h2.6M18.5 4.8v2.4" />
+        </g>
+    </g>
+</svg>
