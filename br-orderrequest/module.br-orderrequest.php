@@ -3,14 +3,14 @@
 /**
  * @copyright   Copyright (C) 2025 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-06-01
+ * @version     2025-11-12
  * iTop module definition file
  */
 
 /** @disregard P1009 Undefined type SetupWebPage - The SetupWebPage class is provided by iTop during module registration. */
 SetupWebPage::AddModule(
     __FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-    'br-orderrequest/0.0.1',
+    'br-orderrequest/0.1.0',
     array(
         // Identification
         //

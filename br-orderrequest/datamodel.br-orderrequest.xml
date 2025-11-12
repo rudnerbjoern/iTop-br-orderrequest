@@ -6,25 +6,6 @@
     -->
     <classes>
         <class id="OrderRequest" _delta="define">
-            <!-- Date Time
-
-            Start date (start_date)	Date/time (AttributeDateTime)
-            Approval requested on (approval_request_date)	Date/time (AttributeDateTime)
-            Approval decision on (approval_date)	Date/time (AttributeDateTime)
-            Close date (close_date)	Date/time (AttributeDateTime)	 	Null Allowed
-            End date (end_date)	Date/time (AttributeDateTime)
-            Last update (last_update)	Date/time (AttributeDateTime)
-
-            Relations
-            Related project (related_project_id)
-            Related request (parent_request_id)
-            Related incident (parent_incident_id)
-            Related problem (parent_problem_id)
-            Related change (parent_change_id)
-
-            Child requests (related_request_list)
-
-            -->
             <parent>Ticket</parent>
             <php_parent>
                 <name>BR\Extension\OrderRequest\Model\_OrderRequest</name>
@@ -1007,31 +988,31 @@
                         <value id="EA">
                             <code>EA</code>
                             <rank>10</rank>
-                        </value>   <!-- each / Stück -->
+                        </value>
                         <value id="PT">
                             <code>PT</code>
                             <rank>20</rank>
-                        </value>   <!-- Personentag -->
+                        </value>
                         <value id="HUR">
                             <code>HUR</code>
                             <rank>30</rank>
-                        </value> <!-- hour -->
+                        </value>
                         <value id="LIC">
                             <code>LIC</code>
                             <rank>40</rank>
-                        </value> <!-- license -->
+                        </value>
                         <value id="SET">
                             <code>SET</code>
                             <rank>50</rank>
-                        </value> <!-- set -->
+                        </value>
                         <value id="MON">
                             <code>MON</code>
                             <rank>60</rank>
-                        </value> <!-- month -->
+                        </value>
                         <value id="ANN">
                             <code>ANN</code>
                             <rank>70</rank>
-                        </value> <!-- year -->
+                        </value>
                     </values>
                     <is_null_allowed>true</is_null_allowed>
                     <default_value>EA</default_value>
@@ -1149,14 +1130,6 @@
                 </details>
                 <list>
                     <items>
-                        <!--
-                        <item id="order_request_ref">
-                            <rank>5</rank>
-                        </item>
-                        <item id="line_number">
-                            <rank>10</rank>
-                        </item>
-                        -->
                         <item id="name">
                             <rank>20</rank>
                         </item>
@@ -1341,40 +1314,84 @@
             <presentation>
                 <details>
                     <items>
-                        <item id="name" />
-                        <item id="org_id" />
-                        <item id="code" />
-                        <item id="status" />
-                        <item id="requires_budget_owner_approval" />
-                        <item id="default_approver_id" />
-                        <item id="description" />
+                        <item id="name">
+                            <rank>10</rank>
+                        </item>
+                        <item id="org_id">
+                            <rank>20</rank>
+                        </item>
+                        <item id="code">
+                            <rank>30</rank>
+                        </item>
+                        <item id="status">
+                            <rank>40</rank>
+                        </item>
+                        <item id="requires_budget_owner_approval">
+                            <rank>50</rank>
+                        </item>
+                        <item id="default_approver_id">
+                            <rank>60</rank>
+                        </item>
+                        <item id="description">
+                            <rank>70</rank>
+                        </item>
                     </items>
                 </details>
                 <search>
                     <items>
-                        <item id="name" />
-                        <item id="code" />
-                        <item id="org_id" />
-                        <item id="status" />
-                        <item id="requires_budget_owner_approval" />
-                        <item id="default_approver_id" />
-                        <item id="description" />
+                        <item id="name">
+                            <rank>10</rank>
+                        </item>
+                        <item id="code">
+                            <rank>20</rank>
+                        </item>
+                        <item id="org_id">
+                            <rank>30</rank>
+                        </item>
+                        <item id="status">
+                            <rank>40</rank>
+                        </item>
+                        <item id="requires_budget_owner_approval">
+                            <rank>50</rank>
+                        </item>
+                        <item id="default_approver_id">
+                            <rank>60</rank>
+                        </item>
+                        <item id="description">
+                            <rank>70</rank>
+                        </item>
                     </items>
                 </search>
                 <list>
                     <items>
-                        <item id="org_id" />
-                        <item id="status" />
-                        <item id="code" />
-                        <item id="requires_budget_owner_approval" />
-                        <item id="default_approver_id" />
+                        <item id="org_id">
+                            <rank>10</rank>
+                        </item>
+                        <item id="status">
+                            <rank>20</rank>
+                        </item>
+                        <item id="code">
+                            <rank>30</rank>
+                        </item>
+                        <item id="requires_budget_owner_approval">
+                            <rank>40</rank>
+                        </item>
+                        <item id="default_approver_id">
+                            <rank>50</rank>
+                        </item>
                     </items>
                 </list>
                 <summary>
                     <items>
-                        <item id="code" />
-                        <item id="org_id" />
-                        <item id="default_approver_id" />
+                        <item id="code">
+                            <rank>10</rank>
+                        </item>
+                        <item id="org_id">
+                            <rank>20</rank>
+                        </item>
+                        <item id="default_approver_id">
+                            <rank>30</rank>
+                        </item>
                     </items>
                 </summary>
             </presentation>
@@ -1383,7 +1400,7 @@
     <!-- ***************** Menus ***************** -->
     <menus>
         <menu id="OrderRequest" xsi:type="MenuGroup" _delta="define">
-            <rank>80</rank>
+            <rank>60</rank>
             <style>
                 <decoration_classes>fas fa-shopping-cart</decoration_classes>
             </style>

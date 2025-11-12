@@ -15,8 +15,8 @@
     <description>
         <![CDATA[Extension for handling order Requests in iTop. Adds a new class 'Order Request' to manage and track orders efficiently within the iTop system.]]>
     </description>
-    <version>0.0.1</version>
-    <release_date>2025-06-01</release_date>
+    <version>0.1.0</version>
+    <release_date>2025-11-12</release_date>
     <version_description />
     <itop_version_min>3.2.0</itop_version_min>
     <status>stable</status>

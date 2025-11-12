@@ -19,6 +19,7 @@
         "friendlyname",
         "functionalcis",
         "macaddress",
+        "mgmt",
         "moreinfo",
         "orderrequest",
         "orderrequestlineitem",
@@ -26,6 +27,7 @@
         "otherinfo",
         "physicalinterface",
         "providercontracts",
+        "qtyprice",
         "requestmgmt",
         "serialnumber"
     ],
