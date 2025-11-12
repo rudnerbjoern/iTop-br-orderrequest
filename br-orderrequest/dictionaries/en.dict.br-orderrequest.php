@@ -157,6 +157,7 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestLineItem/Attribute:unit_price_estimated+' => 'Estimated price per unit.',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated'  => 'Estimated total',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated+' => 'Auto-computed as quantity × estimated unit price.',
+    'Class:OrderRequestLineItem/Error:ParentNotEditable'      => 'This line item cannot be modified because the related Order Request is no longer in "draft" status.',
     'Class:OrderRequestLineItem/Error:QtyMustBePositive'      => 'Quantity must be greater than 0.',
     'Class:OrderRequestLineItem/Error:UnitPriceNegative'      => 'Estimated unit price cannot be negative.',
     'Class:OrderRequestLineItem/Error:UomRequired'            => 'Unit of measure is required.',

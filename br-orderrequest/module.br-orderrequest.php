@@ -2,19 +2,19 @@
 
 /**
  * @copyright   Copyright (C) 2025 Björn Rudner
- * @license     https://www.gnu.org/licenses/gpl-3.0.en.html
+ * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
  * @version     2025-06-01
  * iTop module definition file
  */
 
-/** @disregard P1009 Undefined type SetupWebPage */
+/** @disregard P1009 Undefined type SetupWebPage - The SetupWebPage class is provided by iTop during module registration. */
 SetupWebPage::AddModule(
     __FILE__, // Path to the current file, all other file names are relative to the directory containing this file
     'br-orderrequest/0.0.1',
     array(
         // Identification
         //
-        'label' => 'DDatamodel: Order Request',
+        'label' => 'Datamodel: Order Request',
         'category' => 'business',
 
         // Setup
@@ -22,6 +22,7 @@ SetupWebPage::AddModule(
         'dependencies' => array(
             'itop-config-mgmt/3.1.0',
             'itop-service-mgmt/3.2.0',
+            'itop-tickets/3.2.0',
         ),
         'mandatory' => false,
         'visible' => true,

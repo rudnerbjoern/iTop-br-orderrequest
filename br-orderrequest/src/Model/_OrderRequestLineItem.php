@@ -1,6 +1,17 @@
 <?php
 
 /**
+ * iTop Order Request (BANF) - Line item model logic
+ *
+ * This class contains the business logic for individual order request line items:
+ * - Prefill of sequential line_number (1..n) within the same OrderRequest
+ * - Computation of total_price_estimated (quantity × unit_price_estimated)
+ * - Attribute flags (read-only) and immutability when parent OrderRequest is not in 'draft'
+ * - Server-side validations (qty > 0, price >= 0, UoM required) and duplicate warnings
+ * - Guard against edits and deletions once the parent OrderRequest has left 'draft'
+ *
+ * The generated class OrderRequestLineItem will extend this class (via <php_parent>).
+ *
  * @copyright   Copyright (C) 2025 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
  * @version     2025-11-11
@@ -10,35 +21,69 @@ namespace BR\Extension\OrderRequest\Model;
 
 use Combodo\iTop\Service\Events\EventData;
 use cmdbAbstractObject;
-use CMDBSource;
 use MetaModel;
 use DBObjectSearch;
 use DBObjectSet;
 use DBObject;
-use ItopCounter;
-use AttributeDate;
-use AttributeDateTime;
 
 /**
- * The generated class OrderRequestLineItem will extend this class
- * (configured via <php_parent> in the XML).
+ * Parent class for the generated OrderRequestLineItem model.
+ *
+ * The XML binds the generated class to this parent using:
+ * <php_parent><name>BR\Extension\OrderRequest\Model\_OrderRequestLineItem</name>...</php_parent>
  */
 class _OrderRequestLineItem extends cmdbAbstractObject
 {
 
+    /**
+     * Check if the parent OrderRequest is editable.
+     *
+     * Contract:
+     * - When creating a new line item from a LinkedSet, the parent is usually provided
+     *   by the UI context. If the parent cannot be resolved here, we *allow* edits,
+     *   because the subsequent write will fail anyway if no parent is set.
+     * - If a parent exists, only return true if its status is 'draft'.
+     *
+     * @return bool True if edits are allowed, false if the parent is not in 'draft'.
+     */
+    private function isParentEditable(): bool
+    {
+        $iOrderId = (int)($this->Get('order_request_id') ?: 0);
+        if ($iOrderId <= 0) {
+            // During creation via LinkedSet, the parent gets injected later by the UI.
+            // Be permissive here; persistence will still validate the presence of a parent.
+            return true;
+        }
+
+        /** @var \DBObject|null $oParent */
+        $oParent = \MetaModel::GetObject('OrderRequest', $iOrderId, false);
+        if (!$oParent) {
+            // Defensive: if we cannot load the parent, do not hard-fail in flags.
+            return true;
+        }
+        return ((string)$oParent->Get('status') === 'draft');
+    }
 
     /**
-     * Ermittelt die OrderRequest-ID aus Objekt und UI-Kontext.
+     * Resolve the parent OrderRequest ID from the object and UI context.
+     *
+     * Lookup order:
+     *  1) The object's own 'order_request_id' (already set?)
+     *  2) Direct context parameter 'order_request_id'
+     *  3) LinkedSet context via 'source_obj' (finalclass == 'OrderRequest')
+     *
+     * @param array $aContextParam UI context passed by iTop
+     * @return int The order_request_id or 0 if not resolvable
      */
     private function resolveOrderIdFromContext(array &$aContextParam): int
     {
-        // 1) aus dem Objekt selbst
+        // 1) From the object itself
         $iOrderId = (int)($this->Get('order_request_id') ?: 0);
         if ($iOrderId > 0) {
             return $iOrderId;
         }
 
-        // 2) aus einem direkten Kontextparameter
+        // 2) From a direct context parameter
         if (isset($aContextParam['order_request_id'])) {
             $iOrderId = (int)$aContextParam['order_request_id'];
             if ($iOrderId > 0) {
@@ -46,9 +91,9 @@ class _OrderRequestLineItem extends cmdbAbstractObject
             }
         }
 
-        // 3) aus Linked-Set-Kontext (source_obj = OrderRequest)
+        // 3) From LinkedSet context: source_obj = OrderRequest
         if (isset($aContextParam['source_obj']) && is_object($aContextParam['source_obj'])) {
-            // keine harte Abhängigkeit: nur prüfen, ob es wie ein DBObject ist
+            // Avoid hard coupling: only check if it looks like a DBObject
             if ($aContextParam['source_obj'] instanceof \DBObject) {
                 $sFinal = (string)$aContextParam['source_obj']->Get('finalclass');
                 if ($sFinal === 'OrderRequest') {
@@ -64,8 +109,16 @@ class _OrderRequestLineItem extends cmdbAbstractObject
     }
 
     /**
-     * Liefert die nächste Positionsnummer (1 oder MAX(line_number)+1) für eine BANF.
-     * Nutzt SQL für MAX() und fällt bei Bedarf auf OQL zurück.
+     * Compute the next line number for a given OrderRequest:
+     *  - 1 if no lines exist yet
+     *  - MAX(line_number) + 1 otherwise
+     *
+     * Implementation note:
+     * - Uses OQL iteration to determine the max value. If performance becomes a concern,
+     *   this can be replaced with a direct SQL MAX() query via CMDBSource.
+     *
+     * @param int $iOrderId The parent OrderRequest ID
+     * @return int The next sequential line number
      */
     private function getNextLineNumber(int $iOrderId): int
     {
@@ -73,17 +126,7 @@ class _OrderRequestLineItem extends cmdbAbstractObject
             return 1;
         }
 
-        // Schnellweg: SQL MAX()
-        $row = CMDBSource::QuerySingleRow(
-            'SELECT MAX(line_number) AS max_ln FROM orderrequestlineitem WHERE order_request_id = :id',
-            ['id' => $iOrderId]
-        );
-        $iMax = (int)($row['max_ln'] ?? 0);
-        if ($iMax > 0) {
-            return $iMax + 1;
-        }
-
-        // Fallback (sollte selten nötig sein): OQL-Iteration
+        // OQL fallback (simple and portable across DB engines supported by iTop)
         $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
         $oSet    = new DBObjectSet($oSearch, [], ['id' => $iOrderId]);
 
@@ -97,14 +140,18 @@ class _OrderRequestLineItem extends cmdbAbstractObject
         return ($iMax > 0) ? $iMax + 1 : 1;
     }
 
-
     /**
-     * PrefillCreationForm: setzt line_number = 1 bzw. max+1 für dieselbe BANF.
-     * Greift in der UI (auch beim "Add" aus dem LinkedSet).
+     * PrefillCreationForm
+     *
+     * Called by iTop prior to rendering the creation form (UI).
+     * If 'line_number' is empty, compute the next sequential value for the same parent OrderRequest.
+     *
+     * @param array $aContextParam UI context passed by iTop
+     * @return void
      */
     public function PrefillCreationForm(&$aContextParam): void
     {
-        // nur vorbefüllen, wenn leer
+        // Only prefill when the field is empty
         $iLine = (int)($this->Get('line_number') ?: 0);
         if ($iLine > 0) {
             return;
@@ -114,11 +161,14 @@ class _OrderRequestLineItem extends cmdbAbstractObject
         $this->Set('line_number', $this->getNextLineNumber($iOrderId));
     }
 
-    /* ========= Event callbacks ========= */
-
     /**
-     * EVENT_DB_COMPUTE_VALUES: total = quantity * unit_price_estimated (gerundet)
-     * Name beibehalten (deiner Version), plus Wrapper darunter für ältere XMLs.
+     * EVENT_DB_COMPUTE_VALUES
+     *
+     * Compute transient values before write:
+     * - total_price_estimated = ROUND(quantity × unit_price_estimated, 2)
+     *
+     * @param EventData $oEventData Event payload (not used here)
+     * @return void
      */
     public function OnLineItemComputeValues(EventData $oEventData): void
     {
@@ -128,7 +178,13 @@ class _OrderRequestLineItem extends cmdbAbstractObject
     }
 
     /**
-     * total_price_estimated read-only (initial flags)
+     * EVENT_DB_SET_INITIAL_ATTRIBUTES_FLAGS
+     *
+     * Initial (one-time) attribute flags:
+     * - Make total_price_estimated read-only from the start (it's a computed field).
+     *
+     * @param EventData $oEventData Event payload (not used here)
+     * @return void
      */
     public function OnLineItemSetInitialAttributesFlags(EventData $oEventData): void
     {
@@ -136,19 +192,69 @@ class _OrderRequestLineItem extends cmdbAbstractObject
     }
 
     /**
-     * total_price_estimated read-only (contextual flags)
+     * EVENT_DB_SET_ATTRIBUTES_FLAGS
+     *
+     * Contextual attribute flags each time the UI recomputes flags:
+     * - Keep total_price_estimated read-only
+     * - Once a line exists (id > 0), lock its parent link (order_request_id)
+     * - If the parent OrderRequest is not 'draft', make *all* editable attributes read-only
+     *
+     * @param EventData $oEventData Event payload (not used here)
+     * @return void
      */
     public function OnLineItemSetAttributesFlags(EventData $oEventData): void
     {
         $this->ForceAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
+
+        // Never allow changing the parent link on existing lines
+        if ((int)$this->GetKey() > 0) {
+            $this->ForceAttributeFlags('order_request_id', OPT_ATT_READONLY);
+        }
+
+        // Lock everything if the parent OrderRequest is not in 'draft'
+        if (!$this->isParentEditable()) {
+            foreach (
+                [
+                    'name',
+                    'vendor_sku',
+                    'quantity',
+                    'uom',
+                    'unit_price_estimated',
+                    'description',
+                    'line_number',
+                    'order_request_id',
+                ] as $sAtt
+            ) {
+                $this->ForceAttributeFlags($sAtt, OPT_ATT_READONLY);
+            }
+        }
     }
 
 
     /**
-     * Validierungen: Menge > 0, Preis >= 0, UoM Pflicht; Duplikat-Hinweis.
+     * EVENT_DB_CHECK_TO_WRITE
+     *
+     * Server-side validations before write:
+     * - Parent must be editable ('draft'); otherwise block the change
+     * - quantity must be > 0
+     * - unit_price_estimated must be >= 0 (if provided)
+     * - uom is required (non-empty)
+     * - duplicate warning: same parent + same name + same uom (different id)
+     *
+     * Notes:
+     * - Duplicate check adds a *warning* (non-blocking), everything else is blocking.
+     *
+     * @param EventData $oEventData Event payload (not used here)
+     * @return void
      */
     public function OnLineItemCheckToWrite(EventData $oEventData): void
     {
+        // Parent status guard
+        if (!$this->isParentEditable()) {
+            $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:ParentNotEditable'));
+            return;
+        }
+
         // qty > 0
         $qty = $this->Get('quantity');
         if ($qty === null || $qty === '' || (float)$qty <= 0) {
@@ -167,7 +273,7 @@ class _OrderRequestLineItem extends cmdbAbstractObject
             $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:UomRequired'));
         }
 
-        // Duplicate warning: same BANF + same name + same UoM (other id)
+        // Duplicate warning: same OrderRequest + same name + same UoM (other id)
         $iOrderId = (int)$this->Get('order_request_id');
         if ($iOrderId > 0 && $uom !== '') {
             $oSearch = DBObjectSearch::FromOQL(
@@ -185,12 +291,30 @@ class _OrderRequestLineItem extends cmdbAbstractObject
         }
     }
 
-
+    /**
+     * EVENT_DB_CHECK_TO_DELETE
+     *
+     * Prevent deletion of a line item if the parent OrderRequest is not in 'draft'.
+     *
+     * @param EventData $oEventData Event payload (not used here)
+     * @return void
+     */
+    public function OnLineItemCheckToDelete(EventData $oEventData): void
+    {
+        if (!$this->isParentEditable()) {
+            $this->AddDeleteIssue(\Dict::S('Class:OrderRequestLineItem/Error:ParentNotEditable'));
+        }
+    }
 
     /**
-     * (Optional) Safety net für non-UI writes (CSV/REST):
-     * setzt line_number auf 1 oder max+1, wenn leer.
-     * Aktivieren über EVENT_DB_BEFORE_WRITE Listener im XML.
+     * EVENT_DB_BEFORE_WRITE
+     *
+     * Safety net for non-UI writes (CSV/REST):
+     * - If line_number is empty, set it to 1 or MAX+1 within the same parent OrderRequest.
+     *   (The UI typically calls PrefillCreationForm; this covers programmatic writes.)
+     *
+     * @param EventData $oEventData Event payload (not used here)
+     * @return void
      */
     public function OnLineItemBeforeWrite(EventData $oEventData): void
     {

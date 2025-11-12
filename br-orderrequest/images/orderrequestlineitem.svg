@@ -1,17 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="24" height="24" viewBox="0 0 24 24" aria-labelledby="title" role="img" xmlns="http://www.w3.org/2000/svg">
-    <title>Order Request Line Item - Box and Qty</title>
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8">
-        <!-- Box -->
-        <g stroke="#F59E0B">
-            <path d="M5 7l7-3 7 3-7 3-7-3z" />
-            <path d="M5 7v7.5c0 .8.5 1.5 1.2 1.8l5.8 2.7 5.8-2.7c.7-.3 1.2-1 1.2-1.8V7" />
-            <path d="M12 10v9" />
-        </g>
-        <!-- Qty badge (double dots to suggest multiple) -->
-        <g stroke="#3B82F6">
-            <circle cx="18.5" cy="6" r="3.2" />
-            <path d="M17.2 6h2.6M18.5 4.8v2.4" />
-        </g>
+<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            .main { fill:#5FD6CB; }
+            .ink { stroke:#000000; }
+            .soft { fill:#5FD6CB; opacity:.10; }
+        </style>
+    </defs>
+
+    <!-- Clipboard-Body -->
+    <rect x="8" y="10" width="34" height="30" rx="4" class="soft" />
+    <rect x="8" y="10" width="34" height="30" rx="4" class="ink" stroke-width="2" fill="none" />
+
+    <!-- Klemme -->
+    <rect x="18" y="6" width="14" height="8" rx="2" class="main" />
+    <rect x="18" y="6" width="14" height="8" rx="2" class="ink" stroke-width="1.5" fill="none" />
+    <circle cx="25" cy="10" r="2" fill="#000000" />
+
+    <!-- Zeilen mit Checkboxen (repräsentiert einzelne Positionen) -->
+    <g class="ink" stroke-width="2" stroke-linecap="round">
+        <rect x="14" y="19" width="3" height="3" fill="#000000" />
+        <line x1="19" y1="20.5" x2="30" y2="20.5" />
+        <rect x="14" y="24" width="3" height="3" fill="#000000" />
+        <line x1="19" y1="25.5" x2="32" y2="25.5" />
+        <rect x="14" y="29" width="3" height="3" fill="#000000" />
+        <line x1="19" y1="30.5" x2="28" y2="30.5" />
+    </g>
+
+    <!-- "#" Badge (steht für „Zeilennummer/Item“) -->
+    <circle cx="37" cy="34" r="6.8" class="main" />
+    <g fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round">
+        <line x1="35.2" y1="30.8" x2="35.2" y2="37.2" />
+        <line x1="38.8" y1="30.8" x2="38.8" y2="37.2" />
+        <line x1="33.8" y1="33" x2="40.2" y2="33" />
+        <line x1="33.8" y1="35" x2="40.2" y2="35" />
     </g>
 </svg>

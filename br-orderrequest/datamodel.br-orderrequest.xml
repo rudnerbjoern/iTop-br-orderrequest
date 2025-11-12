@@ -6,6 +6,25 @@
     -->
     <classes>
         <class id="OrderRequest" _delta="define">
+            <!-- Date Time
+
+            Start date (start_date)	Date/time (AttributeDateTime)
+            Approval requested on (approval_request_date)	Date/time (AttributeDateTime)
+            Approval decision on (approval_date)	Date/time (AttributeDateTime)
+            Close date (close_date)	Date/time (AttributeDateTime)	 	Null Allowed
+            End date (end_date)	Date/time (AttributeDateTime)
+            Last update (last_update)	Date/time (AttributeDateTime)
+
+            Relations
+            Related project (related_project_id)
+            Related request (parent_request_id)
+            Related incident (parent_incident_id)
+            Related problem (parent_problem_id)
+            Related change (parent_change_id)
+
+            Child requests (related_request_list)
+
+            -->
             <parent>Ticket</parent>
             <php_parent>
                 <name>BR\Extension\OrderRequest\Model\_OrderRequest</name>
@@ -28,11 +47,14 @@
                 </naming>
                 <style>
                     <icon>images/orderrequest.svg</icon>
+                    <main_color>#0D9488</main_color>
                 </style>
                 <reconciliation>
                     <attributes>
                         <attribute id="ref" />
+                        <attribute id="title" />
                         <attribute id="org_id" />
+                        <attribute id="org_name" />
                     </attributes>
                 </reconciliation>
                 <fields_semantic>
@@ -46,54 +68,95 @@
             </properties>
             <fields>
                 <field id="status" xsi:type="AttributeEnum">
+                    <sql>status</sql>
                     <values>
                         <value id="draft">
                             <code>draft</code>
                             <rank>10</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-new-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-new-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-plus-circle</decoration_classes>
+                            </style>
                         </value>
                         <value id="submitted">
                             <code>submitted</code>
                             <rank>20</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-active-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-active-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-paper-plane</decoration_classes>
+                            </style>
                         </value>
                         <value id="in_review">
                             <code>in_review</code>
                             <rank>30</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-active-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-active-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-search-plus</decoration_classes>
+                            </style>
                         </value>
                         <value id="waiting_approval">
                             <code>waiting_approval</code>
                             <rank>40</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-waiting-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-waiting-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-hourglass-half</decoration_classes>
+                            </style>
                         </value>
                         <value id="approved">
                             <code>approved</code>
                             <rank>50</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-success-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-success-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-check-circle</decoration_classes>
+                            </style>
                         </value>
                         <value id="rejected">
                             <code>rejected</code>
                             <rank>60</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-failure-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-failure-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-times-circle</decoration_classes>
+                            </style>
                         </value>
                         <value id="procurement">
                             <code>procurement</code>
                             <rank>70</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-neutral-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-neutral-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-shopping-cart</decoration_classes>
+                            </style>
                         </value>
                         <value id="closed">
                             <code>closed</code>
                             <rank>80</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-frozen-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-frozen-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-flag-checkered</decoration_classes>
+                            </style>
                         </value>
                     </values>
-                    <sql>status</sql>
-                    <default_value>draft</default_value>
-                    <is_null_allowed>false</is_null_allowed>
                     <display_style>list</display_style>
                     <sort_type>rank</sort_type>
+                    <default_value>draft</default_value>
+                    <is_null_allowed>false</is_null_allowed>
                 </field>
                 <field id="request_type_id" xsi:type="AttributeExternalKey">
                     <sql>request_type_id</sql>
                     <target_class>OrderRequestType</target_class>
-                    <is_null_allowed>false</is_null_allowed>
-                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                    <filter><![CDATA[SELECT OrderRequestType WHERE status = 'active' AND org_id = :this->org_id]]></filter>
                     <dependencies>
                         <attribute id="org_id" />
                     </dependencies>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
                 <field id="request_type_name" xsi:type="AttributeExternalField">
                     <extkey_attcode>request_type_id</extkey_attcode>
@@ -102,12 +165,13 @@
                 <field id="technical_approver_id" xsi:type="AttributeExternalKey">
                     <sql>technical_approver_id</sql>
                     <target_class>Person</target_class>
-                    <is_null_allowed>true</is_null_allowed>
-                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                    <filter><![CDATA[SELECT Person WHERE org_id = :this->org_id]]></filter>
                     <dependencies>
                         <attribute id="org_id" />
                         <attribute id="request_type_id" />
                     </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
                 <field id="technical_approver_name" xsi:type="AttributeExternalField">
                     <extkey_attcode>technical_approver_id</extkey_attcode>
@@ -115,12 +179,12 @@
                 </field>
                 <field id="approved_by_id" xsi:type="AttributeExternalKey">
                     <sql>approved_by_id</sql>
-                    <is_null_allowed>true</is_null_allowed>
                     <target_class>Person</target_class>
-                    <on_target_delete>DEL_AUTO</on_target_delete>
                     <dependencies>
                         <attribute id="org_id" />
                     </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
                 <field id="approved_by_name" xsi:type="AttributeExternalField">
                     <extkey_attcode>approved_by_id</extkey_attcode>
@@ -160,10 +224,10 @@
                     <decimals>2</decimals>
                 </field>
                 <field id="parent_request_id" xsi:type="AttributeExternalKey">
-                    <filter><![CDATA[SELECT UserRequest WHERE id != :this->id AND status NOT IN ('rejected','resolved','closed')]]></filter>
-                    <dependencies />
                     <sql>parent_request_id</sql>
                     <target_class>UserRequest</target_class>
+                    <filter><![CDATA[SELECT UserRequest WHERE id != :this->id AND status NOT IN ('rejected','resolved','closed')]]></filter>
+                    <dependencies />
                     <is_null_allowed>true</is_null_allowed>
                     <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
@@ -172,9 +236,9 @@
                     <target_attcode>ref</target_attcode>
                 </field>
                 <field id="parent_incident_id" xsi:type="AttributeExternalKey">
-                    <filter><![CDATA[SELECT Incident WHERE status != "closed"]]></filter>
                     <sql>parent_incident_id</sql>
                     <target_class>Incident</target_class>
+                    <filter><![CDATA[SELECT Incident WHERE status != "closed"]]></filter>
                     <is_null_allowed>true</is_null_allowed>
                     <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
@@ -193,9 +257,9 @@
                     <target_attcode>ref</target_attcode>
                 </field>
                 <field id="parent_change_id" xsi:type="AttributeExternalKey">
-                    <filter><![CDATA[SELECT Change WHERE status != "closed"]]></filter>
                     <sql>parent_change_id</sql>
                     <target_class>Change</target_class>
+                    <filter><![CDATA[SELECT Change WHERE status != "closed"]]></filter>
                     <is_null_allowed>true</is_null_allowed>
                     <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
@@ -224,23 +288,17 @@
                 <states>
                     <state id="draft">
                         <flags>
-                            <attribute id="estimated_total_cost">
-                                <read_only />
-                            </attribute>
                             <attribute id="start_date">
                                 <read_only />
                             </attribute>
                             <attribute id="approval_request_date">
-                                <read_only />
-                            </attribute>
-                            <attribute id="approved_by_id">
-                                <read_only />
+                                <hidden />
                             </attribute>
                             <attribute id="approval_date">
-                                <read_only />
+                                <hidden />
                             </attribute>
-                            <attribute id="approval_comment">
-                                <read_only />
+                            <attribute id="close_date">
+                                <hidden />
                             </attribute>
                             <attribute id="end_date">
                                 <hidden />
@@ -248,7 +306,14 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-                            <attribute id="close_date">
+
+                            <attribute id="estimated_total_cost">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approved_by_id">
+                                <hidden />
+                            </attribute>
+                            <attribute id="approval_comment">
                                 <hidden />
                             </attribute>
                         </flags>
@@ -261,13 +326,61 @@
                             <transition id="ev_reject">
                                 <target>rejected</target>
                                 <flags />
-                                <actions />
+                                <actions>
+                                    <action id="set-close-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">close_date</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-end-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">end_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
                             </transition>
                         </transitions>
                     </state>
                     <state id="submitted">
                         <inherit_flags_from>draft</inherit_flags_from>
                         <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+
+                            <attribute id="parent_request_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="parent_incident_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="parent_problem_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="parent_change_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="related_request_list">
+                                <read_only />
+                            </attribute>
+
                             <attribute id="title">
                                 <read_only />
                                 <mandatory />
@@ -305,7 +418,26 @@
                     </state>
                     <state id="in_review">
                         <inherit_flags_from>submitted</inherit_flags_from>
-                        <flags />
+                        <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+                        </flags>
                         <transitions>
                             <transition id="ev_request_approval">
                                 <target>waiting_approval</target>
@@ -322,8 +454,30 @@
                         </transitions>
                     </state>
                     <state id="waiting_approval">
-                        <inherit_flags_from>submitted</inherit_flags_from>
+                        <inherit_flags_from>in_review</inherit_flags_from>
                         <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+
+                            <attribute id="approved_by_id">
+                                <hidden />
+                            </attribute>
                             <attribute id="approval_comment" />
                         </flags>
                         <transitions>
@@ -366,17 +520,48 @@
                                             <param xsi:type="string">approval_date</param>
                                         </params>
                                     </action>
+                                    <action id="set-close-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">close_date</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-end-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">end_date</param>
+                                        </params>
+                                    </action>
                                 </actions>
                             </transition>
                         </transitions>
                     </state>
                     <state id="approved">
-                        <inherit_flags_from>submitted</inherit_flags_from>
+                        <inherit_flags_from>waiting_approval</inherit_flags_from>
                         <flags>
-                            <attribute id="approved_by_id">
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
                                 <read_only />
                             </attribute>
                             <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+
+                            <attribute id="approved_by_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_comment">
                                 <read_only />
                             </attribute>
                         </flags>
@@ -395,6 +580,25 @@
                     <state id="procurement">
                         <inherit_flags_from>approved</inherit_flags_from>
                         <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+
                             <attribute id="procurement_reference">
                                 <read_only />
                             </attribute>
@@ -403,17 +607,68 @@
                             <transition id="ev_close">
                                 <target>closed</target>
                                 <flags />
-                                <actions />
+                                <actions>
+                                    <action id="set-close-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">close_date</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-end-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">end_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
                             </transition>
                         </transitions>
                     </state>
                     <state id="rejected">
-                        <flags />
+                        <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="close_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="end_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+                        </flags>
                         <transitions />
                     </state>
                     <state id="closed">
                         <inherit_flags_from>procurement</inherit_flags_from>
-                        <flags />
+                        <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="close_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="end_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+                        </flags>
                         <transitions />
                     </state>
                 </states>
@@ -468,7 +723,7 @@
                                         <item id="org_id">
                                             <rank>10</rank>
                                         </item>
-                                        <item id="caller_id">
+                                        <item id="title">
                                             <rank>20</rank>
                                         </item>
                                         <item id="status">
@@ -477,25 +732,11 @@
                                         <item id="request_type_id">
                                             <rank>40</rank>
                                         </item>
-                                        <item id="title">
+                                        <item id="caller_id">
                                             <rank>50</rank>
                                         </item>
                                         <item id="description">
                                             <rank>60</rank>
-                                        </item>
-                                    </items>
-                                </item>
-                                <item id="fieldset:OrderRequest:approval">
-                                    <rank>20</rank>
-                                    <items>
-                                        <item id="technical_approver_id">
-                                            <rank>10</rank>
-                                        </item>
-                                        <item id="approved_by_id">
-                                            <rank>20</rank>
-                                        </item>
-                                        <item id="approval_comment">
-                                            <rank>30</rank>
                                         </item>
                                     </items>
                                 </item>
@@ -515,8 +756,22 @@
                                         </item>
                                     </items>
                                 </item>
-                                <item id="fieldset:Ticket:date">
+                                <item id="fieldset:OrderRequest:approval">
                                     <rank>20</rank>
+                                    <items>
+                                        <item id="technical_approver_id">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="approved_by_id">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="approval_comment">
+                                            <rank>30</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                                <item id="fieldset:Ticket:date">
+                                    <rank>30</rank>
                                     <items>
                                         <item id="start_date">
                                             <rank>10</rank>
@@ -664,9 +919,6 @@
                         <item id="request_type_name">
                             <rank>30</rank>
                         </item>
-                        <item id="status">
-                            <rank>40</rank>
-                        </item>
                         <item id="estimated_total_cost">
                             <rank>50</rank>
                         </item>
@@ -689,11 +941,16 @@
                 <db_final_class_field />
                 <naming>
                     <attributes>
-                        <attribute id="name" />
+                        <attribute id="order_request_ref" />
+                        <attribute id="line_number" />
                     </attributes>
+                    <complementary_attributes>
+                        <attribute id="name" />
+                    </complementary_attributes>
                 </naming>
                 <style>
                     <icon>images/orderrequestlineitem.svg</icon>
+                    <main_color>#5FD6CB</main_color>
                 </style>
                 <order>
                     <columns>
@@ -821,6 +1078,11 @@
                     <callback>OnLineItemCheckToWrite</callback>
                     <rank>10</rank>
                 </event_listener>
+                <event_listener id="OnLineItemCheckToDelete">
+                    <event>EVENT_DB_CHECK_TO_DELETE</event>
+                    <callback>OnLineItemCheckToDelete</callback>
+                    <rank>10</rank>
+                </event_listener>
                 <event_listener id="OnLineItemBeforeWrite">
                     <event>EVENT_DB_BEFORE_WRITE</event>
                     <callback>OnLineItemBeforeWrite</callback>
@@ -887,11 +1149,16 @@
                 </details>
                 <list>
                     <items>
+                        <!--
                         <item id="order_request_ref">
                             <rank>5</rank>
                         </item>
                         <item id="line_number">
                             <rank>10</rank>
+                        </item>
+                        -->
+                        <item id="name">
+                            <rank>20</rank>
                         </item>
                         <item id="vendor_sku">
                             <rank>30</rank>
@@ -988,6 +1255,7 @@
                 </fields_semantic>
                 <style>
                     <icon>images/orderrequesttype.svg</icon>
+                    <main_color>#12B8A9</main_color>
                 </style>
                 <reconciliation>
                     <attributes>
@@ -1025,11 +1293,12 @@
                 <field id="default_approver_id" xsi:type="AttributeExternalKey">
                     <sql>default_approver_id</sql>
                     <target_class>Person</target_class>
-                    <is_null_allowed>true</is_null_allowed>
-                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                    <filter><![CDATA[SELECT Person WHERE org_id = :this->org_id]]></filter>
                     <dependencies>
                         <attribute id="org_id" />
                     </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
                 <field id="default_approver_name" xsi:type="AttributeExternalField">
                     <extkey_attcode>default_approver_id</extkey_attcode>
@@ -1043,10 +1312,20 @@
                         <value id="active">
                             <code>active</code>
                             <rank>10</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-active-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-active-state-secondary-color</complementary_color>
+                                <decoration_classes />
+                            </style>
                         </value>
                         <value id="inactive">
                             <code>inactive</code>
                             <rank>20</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-inactive-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-inactive-state-secondary-color</complementary_color>
+                                <decoration_classes />
+                            </style>
                         </value>
                     </values>
                     <sort_type>rank</sort_type>
@@ -1063,8 +1342,8 @@
                 <details>
                     <items>
                         <item id="name" />
-                        <item id="code" />
                         <item id="org_id" />
+                        <item id="code" />
                         <item id="status" />
                         <item id="requires_budget_owner_approval" />
                         <item id="default_approver_id" />
@@ -1095,6 +1374,7 @@
                     <items>
                         <item id="code" />
                         <item id="org_id" />
+                        <item id="default_approver_id" />
                     </items>
                 </summary>
             </presentation>
