@@ -224,6 +224,8 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequestLineItem/Attribute:uom/Value:MON' => 'Monat',
     'Class:OrderRequestLineItem/Attribute:uom/Value:ANN' => 'Jahr',
 
+    'Class:OrderRequestLineItem/Attribute:functionalcis_list' => 'Verknüpfte CIs',
+
     'Class:OrderRequestLineItem/Attribute:unit_price_estimated'  => 'Geschätzter Einzelpreis',
     'Class:OrderRequestLineItem/Attribute:unit_price_estimated+' => 'Geschätzter Preis pro Einheit.',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated'  => 'Geschätzter Gesamtpreis',
@@ -235,4 +237,19 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequestLineItem/Error:UnitPriceNegative'      => 'Der geschätzte Einzelpreis darf nicht negativ sein.',
     'Class:OrderRequestLineItem/Error:UomRequired'            => 'Bitte eine Mengeneinheit auswählen.',
     'Class:OrderRequestLineItem/Warning:DuplicateNameUom'     => 'Es existiert bereits eine Position mit gleicher Bezeichnung und Mengeneinheit.',
+));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Class: lnkOrderRequestLineItemToFunctionalCI
+// ─────────────────────────────────────────────────────────────────────────────
+/** @disregard P1009 Undefined type Dict */
+Dict::Add('DE DE', 'German', 'Deutsch', array(
+    'Class:lnkOrderRequestLineItemToFunctionalCI' => 'Position / Functional CI',
+    'Class:lnkOrderRequestLineItemToFunctionalCI+' => 'Verknüpft eine BANF-Position mit einem Functional CI.',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:order_request_line_item_id' => 'Position',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:order_request_line_item_name' => 'Positionsname',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:order_request_ref' => 'Order Request',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_id' => 'Functional CI',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_name' => 'Functional CI Name',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:comment' => 'Kommentar',
 ));
