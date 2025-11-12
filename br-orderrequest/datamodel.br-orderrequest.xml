@@ -87,22 +87,22 @@
                                 <decoration_classes>fas fa-hourglass-half</decoration_classes>
                             </style>
                         </value>
+                        <value id="waiting_budget_approval">
+                            <code>waiting_budget_approval</code>
+                            <rank>50</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-waiting-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-waiting-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-coins</decoration_classes>
+                            </style>
+                        </value>
                         <value id="approved">
                             <code>approved</code>
-                            <rank>50</rank>
+                            <rank>60</rank>
                             <style>
                                 <main_color>$ibo-lifecycle-success-state-primary-color</main_color>
                                 <complementary_color>$ibo-lifecycle-success-state-secondary-color</complementary_color>
                                 <decoration_classes>fas fa-check-circle</decoration_classes>
-                            </style>
-                        </value>
-                        <value id="rejected">
-                            <code>rejected</code>
-                            <rank>60</rank>
-                            <style>
-                                <main_color>$ibo-lifecycle-failure-state-primary-color</main_color>
-                                <complementary_color>$ibo-lifecycle-failure-state-secondary-color</complementary_color>
-                                <decoration_classes>fas fa-times-circle</decoration_classes>
                             </style>
                         </value>
                         <value id="procurement">
@@ -114,9 +114,18 @@
                                 <decoration_classes>fas fa-shopping-cart</decoration_classes>
                             </style>
                         </value>
+                        <value id="rejected">
+                            <code>rejected</code>
+                            <rank>80</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-failure-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-failure-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-times-circle</decoration_classes>
+                            </style>
+                        </value>
                         <value id="closed">
                             <code>closed</code>
-                            <rank>80</rank>
+                            <rank>90</rank>
                             <style>
                                 <main_color>$ibo-lifecycle-frozen-state-primary-color</main_color>
                                 <complementary_color>$ibo-lifecycle-frozen-state-secondary-color</complementary_color>
@@ -146,7 +155,9 @@
                 <field id="technical_approver_id" xsi:type="AttributeExternalKey">
                     <sql>technical_approver_id</sql>
                     <target_class>Person</target_class>
-                    <filter><![CDATA[SELECT Person WHERE org_id = :this->org_id]]></filter>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
                     <dependencies>
                         <attribute id="org_id" />
                         <attribute id="request_type_id" />
@@ -156,6 +167,23 @@
                 </field>
                 <field id="technical_approver_name" xsi:type="AttributeExternalField">
                     <extkey_attcode>technical_approver_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="budget_approver_id" xsi:type="AttributeExternalKey">
+                    <sql>budget_approver_id</sql>
+                    <target_class>Person</target_class>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
+                    <dependencies>
+                        <attribute id="org_id" />
+                        <attribute id="request_type_id" />
+                    </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="budget_approver_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>budget_approver_id</extkey_attcode>
                     <target_attcode>name</target_attcode>
                 </field>
                 <field id="approved_by_id" xsi:type="AttributeExternalKey">
@@ -176,6 +204,23 @@
                     <default_value />
                     <is_null_allowed>true</is_null_allowed>
                 </field>
+                <field id="budget_approved_by_id" xsi:type="AttributeExternalKey">
+                    <sql>budget_approved_by_id</sql>
+                    <target_class>Person</target_class>
+                    <dependencies>
+                        <attribute id="org_id" />
+                    </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="budget_approved_by_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>budget_approved_by_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="budget_approval_comment" xsi:type="AttributeHTML">
+                    <sql>budget_approval_comment</sql>
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
                 <field id="approval_request_date" xsi:type="AttributeDateTime">
                     <sql>approval_request_date</sql>
                     <default_value />
@@ -184,6 +229,14 @@
                 <field id="approval_date" xsi:type="AttributeDateTime">
                     <sql>approval_date</sql>
                     <default_value />
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="budget_approval_request_date" xsi:type="AttributeDateTime">
+                    <sql>budget_approval_request_date</sql>
+                    <is_null_allowed>true</is_null_allowed>
+                </field>
+                <field id="budget_approval_date" xsi:type="AttributeDateTime">
+                    <sql>budget_approval_date</sql>
                     <is_null_allowed>true</is_null_allowed>
                 </field>
                 <field id="procurement_reference" xsi:type="AttributeString">
@@ -263,6 +316,9 @@
                     <stimulus id="ev_request_approval" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_approve" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_reject" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_request_budget_approval" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_budget_approve" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_budget_reject" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_procure" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_close" xsi:type="StimulusUserAction" />
                 </stimuli>
@@ -276,6 +332,12 @@
                                 <hidden />
                             </attribute>
                             <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_date">
                                 <hidden />
                             </attribute>
                             <attribute id="close_date">
@@ -295,6 +357,12 @@
                                 <hidden />
                             </attribute>
                             <attribute id="approval_comment">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approved_by_id">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_comment">
                                 <hidden />
                             </attribute>
                         </flags>
@@ -334,6 +402,12 @@
                                 <hidden />
                             </attribute>
                             <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_date">
                                 <hidden />
                             </attribute>
                             <attribute id="close_date">
@@ -385,6 +459,9 @@
                             <attribute id="technical_approver_id">
                                 <read_only />
                             </attribute>
+                            <attribute id="budget_approver_id">
+                                <read_only />
+                            </attribute>
                             <attribute id="line_items">
                                 <read_only />
                             </attribute>
@@ -407,6 +484,12 @@
                                 <hidden />
                             </attribute>
                             <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_date">
                                 <hidden />
                             </attribute>
                             <attribute id="close_date">
@@ -444,6 +527,12 @@
                                 <read_only />
                             </attribute>
                             <attribute id="approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="budget_approval_date">
                                 <hidden />
                             </attribute>
                             <attribute id="close_date">
@@ -485,6 +574,38 @@
                                     </action>
                                 </actions>
                             </transition>
+                            <transition id="ev_request_budget_approval">
+                                <target>waiting_budget_approval</target>
+                                <flags>
+                                    <attribute id="approval_comment">
+                                        <mandatory />
+                                        <must_prompt />
+                                    </attribute>
+                                    <attribute id="budget_approver_id">
+                                        <mandatory />
+                                    </attribute>
+                                </flags>
+                                <actions>
+                                    <action id="set-approver">
+                                        <verb>SetCurrentPerson</verb>
+                                        <params>
+                                            <param xsi:type="string">approved_by_id</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-approval-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">approval_date</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-budget-approval-req-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">budget_approval_request_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
+                            </transition>
                             <transition id="ev_reject">
                                 <target>rejected</target>
                                 <flags />
@@ -517,6 +638,103 @@
                             </transition>
                         </transitions>
                     </state>
+                    <state id="waiting_budget_approval">
+                        <inherit_flags_from>waiting_approval</inherit_flags_from>
+                        <flags>
+                            <attribute id="start_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="close_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="end_date">
+                                <hidden />
+                            </attribute>
+                            <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+
+                            <attribute id="approved_by_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="approval_comment">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_comment" />
+                        </flags>
+                        <transitions>
+                            <transition id="ev_budget_approve">
+                                <target>approved</target>
+                                <flags>
+                                    <attribute id="budget_approval_comment">
+                                        <mandatory />
+                                        <must_prompt />
+                                    </attribute>
+                                </flags>
+                                <actions>
+                                    <action id="set-budget-approver-user">
+                                        <verb>SetCurrentPerson</verb>
+                                        <params>
+                                            <param xsi:type="string">budget_approved_by_id</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-budget-approval-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">budget_approval_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
+                            </transition>
+                            <transition id="ev_budget_reject">
+                                <target>rejected</target>
+                                <flags>
+                                    <attribute id="budget_approval_comment">
+                                        <mandatory />
+                                        <must_prompt />
+                                    </attribute>
+                                </flags>
+                                <actions>
+                                    <action id="set-budget-reject-user">
+                                        <verb>SetCurrentPerson</verb>
+                                        <params>
+                                            <param xsi:type="string">budget_approved_by_id</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-budget-reject-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">budget_approval_date</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-close-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">close_date</param>
+                                        </params>
+                                    </action>
+                                    <action id="set-end-date">
+                                        <verb>SetCurrentDate</verb>
+                                        <params>
+                                            <param xsi:type="string">end_date</param>
+                                        </params>
+                                    </action>
+                                </actions>
+                            </transition>
+                        </transitions>
+                    </state>
                     <state id="approved">
                         <inherit_flags_from>waiting_approval</inherit_flags_from>
                         <flags>
@@ -527,6 +745,12 @@
                                 <read_only />
                             </attribute>
                             <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_date">
                                 <read_only />
                             </attribute>
                             <attribute id="close_date">
@@ -545,6 +769,12 @@
                             <attribute id="approval_comment">
                                 <read_only />
                             </attribute>
+                            <attribute id="budget_approved_by_id">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_comment">
+                                <read_only />
+                            </attribute>
                         </flags>
                         <transitions>
                             <transition id="ev_procure">
@@ -552,6 +782,7 @@
                                 <flags>
                                     <attribute id="procurement_reference">
                                         <mandatory />
+                                        <must_prompt />
                                     </attribute>
                                 </flags>
                                 <actions />
@@ -570,6 +801,12 @@
                             <attribute id="approval_date">
                                 <read_only />
                             </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_date">
+                                <read_only />
+                            </attribute>
                             <attribute id="close_date">
                                 <hidden />
                             </attribute>
@@ -579,7 +816,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="procurement_reference">
                                 <read_only />
                             </attribute>
@@ -616,6 +852,12 @@
                             <attribute id="approval_date">
                                 <read_only />
                             </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_date">
+                                <read_only />
+                            </attribute>
                             <attribute id="close_date">
                                 <read_only />
                             </attribute>
@@ -623,6 +865,13 @@
                                 <read_only />
                             </attribute>
                             <attribute id="last_update">
+                                <read_only />
+                            </attribute>
+
+                            <attribute id="approval_comment">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_comment">
                                 <read_only />
                             </attribute>
                         </flags>
@@ -638,6 +887,12 @@
                                 <read_only />
                             </attribute>
                             <attribute id="approval_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_request_date">
+                                <read_only />
+                            </attribute>
+                            <attribute id="budget_approval_date">
                                 <read_only />
                             </attribute>
                             <attribute id="close_date">
@@ -749,25 +1004,14 @@
                                         <item id="approval_comment">
                                             <rank>30</rank>
                                         </item>
-                                    </items>
-                                </item>
-                                <item id="fieldset:Ticket:date">
-                                    <rank>30</rank>
-                                    <items>
-                                        <item id="start_date">
-                                            <rank>10</rank>
-                                        </item>
-                                        <item id="approval_request_date">
-                                            <rank>20</rank>
-                                        </item>
-                                        <item id="approval_date">
-                                            <rank>30</rank>
-                                        </item>
-                                        <item id="close_date">
+                                        <item id="budget_approver_id">
                                             <rank>40</rank>
                                         </item>
-                                        <item id="last_update">
+                                        <item id="budget_approved_by_id">
                                             <rank>50</rank>
+                                        </item>
+                                        <item id="budget_approval_comment">
+                                            <rank>60</rank>
                                         </item>
                                     </items>
                                 </item>
@@ -790,6 +1034,32 @@
                                         </item>
                                         <item id="parent_change_id">
                                             <rank>40</rank>
+                                        </item>
+                                    </items>
+                                </item>
+                                <item id="fieldset:Ticket:date">
+                                    <rank>30</rank>
+                                    <items>
+                                        <item id="start_date">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="approval_request_date">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="approval_date">
+                                            <rank>30</rank>
+                                        </item>
+                                        <item id="budget_approval_request_date">
+                                            <rank>40</rank>
+                                        </item>
+                                        <item id="budget_approval_date">
+                                            <rank>50</rank>
+                                        </item>
+                                        <item id="close_date">
+                                            <rank>60</rank>
+                                        </item>
+                                        <item id="last_update">
+                                            <rank>70</rank>
                                         </item>
                                     </items>
                                 </item>
@@ -1202,6 +1472,10 @@
         <!-- ***************** Typology ***************** -->
         <class id="OrderRequestType" _delta="define">
             <parent>cmdbAbstractObject</parent>
+            <php_parent>
+                <name>BR\Extension\OrderRequest\Model\_OrderRequestType</name>
+                <file>src/Model/_OrderRequestType.php</file>
+            </php_parent>
             <properties>
                 <category>bizmodel,searchable,application</category>
                 <abstract>false</abstract>
@@ -1266,7 +1540,9 @@
                 <field id="default_approver_id" xsi:type="AttributeExternalKey">
                     <sql>default_approver_id</sql>
                     <target_class>Person</target_class>
-                    <filter><![CDATA[SELECT Person WHERE org_id = :this->org_id]]></filter>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
                     <dependencies>
                         <attribute id="org_id" />
                     </dependencies>
@@ -1309,7 +1585,36 @@
                     <is_null_allowed>false</is_null_allowed>
                     <default_value>no</default_value>
                 </field>
+                <field id="budget_approver_id" xsi:type="AttributeExternalKey">
+                    <sql>budget_approver_id</sql>
+                    <target_class>Person</target_class>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
+                    <dependencies>
+                        <attribute id="org_id" />
+                        <attribute id="requires_budget_owner_approval" />
+                    </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="budget_approver_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>budget_approver_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
             </fields>
+            <event_listeners>
+                <event_listener id="OnOrderRequestTypeSetAttributesFlags">
+                    <event>EVENT_DB_SET_ATTRIBUTES_FLAGS</event>
+                    <callback>OnOrderRequestTypeSetAttributesFlags</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestTypeCheckToWrite">
+                    <event>EVENT_DB_CHECK_TO_WRITE</event>
+                    <callback>OnOrderRequestTypeCheckToWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+            </event_listeners>
             <methods />
             <presentation>
                 <details>
@@ -1326,14 +1631,17 @@
                         <item id="status">
                             <rank>40</rank>
                         </item>
-                        <item id="requires_budget_owner_approval">
+                        <item id="default_approver_id">
                             <rank>50</rank>
                         </item>
-                        <item id="default_approver_id">
+                        <item id="requires_budget_owner_approval">
                             <rank>60</rank>
                         </item>
-                        <item id="description">
+                        <item id="budget_approver_id">
                             <rank>70</rank>
+                        </item>
+                        <item id="description">
+                            <rank>80</rank>
                         </item>
                     </items>
                 </details>
@@ -1351,33 +1659,39 @@
                         <item id="status">
                             <rank>40</rank>
                         </item>
-                        <item id="requires_budget_owner_approval">
+                        <item id="default_approver_id">
                             <rank>50</rank>
                         </item>
-                        <item id="default_approver_id">
+                        <item id="requires_budget_owner_approval">
                             <rank>60</rank>
                         </item>
-                        <item id="description">
+                        <item id="budget_approver_id">
                             <rank>70</rank>
+                        </item>
+                        <item id="description">
+                            <rank>80</rank>
                         </item>
                     </items>
                 </search>
                 <list>
                     <items>
                         <item id="org_id">
-                            <rank>10</rank>
-                        </item>
-                        <item id="status">
                             <rank>20</rank>
                         </item>
-                        <item id="code">
+                        <item id="status">
                             <rank>30</rank>
                         </item>
-                        <item id="requires_budget_owner_approval">
+                        <item id="code">
                             <rank>40</rank>
                         </item>
                         <item id="default_approver_id">
                             <rank>50</rank>
+                        </item>
+                        <item id="requires_budget_owner_approval">
+                            <rank>60</rank>
+                        </item>
+                        <item id="budget_approver_id">
+                            <rank>70</rank>
                         </item>
                     </items>
                 </list>

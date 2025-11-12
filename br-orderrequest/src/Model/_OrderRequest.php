@@ -25,7 +25,6 @@ use DBObjectSet;
 use AttributeDate;
 use AttributeDateTime;
 
-
 /**
  * Parent class for the generated OrderRequest class (declared via <php_parent>).
  *
@@ -44,9 +43,9 @@ class _OrderRequest extends Ticket
      */
     public static function GetTicketRefFormat(): string
     {
+        // Keep short and immutable; changing this later will affect future refs only
         return 'OR-%06d';
     }
-
 
     /**
      * PrefillCreationForm
@@ -61,6 +60,7 @@ class _OrderRequest extends Ticket
      */
     public function PrefillCreationForm(&$aContextParam): void
     {
+        // Use iTop's internal datetime format to avoid timezone/format issues
         if (empty($this->Get('start_date'))) {
             $this->Set('start_date', date(AttributeDateTime::GetInternalFormat()));
         }
@@ -81,12 +81,14 @@ class _OrderRequest extends Ticket
      */
     public function OnOrderRequestSetInitialAttributesFlags(EventData $oEventData): void
     {
+        // Protect system/technical attributes from user edits
         $this->ForceInitialAttributeFlags('ref', OPT_ATT_READONLY);
         $this->ForceInitialAttributeFlags('start_date', OPT_ATT_READONLY);
         $this->ForceInitialAttributeFlags('last_update', OPT_ATT_READONLY);
+
+        // Hide initially to prevent flicker before first compute; still RO later
         $this->ForceInitialAttributeFlags('estimated_total_cost', OPT_ATT_HIDDEN);
     }
-
 
     /**
      * EVENT_DB_SET_ATTRIBUTES_FLAGS
@@ -99,6 +101,7 @@ class _OrderRequest extends Ticket
      */
     public function OnOrderRequestSetAttributesFlags(EventData $oEventData): void
     {
+        // Always computed server-side → never editable
         $this->ForceAttributeFlags('estimated_total_cost', OPT_ATT_READONLY);
     }
 
@@ -113,6 +116,7 @@ class _OrderRequest extends Ticket
      */
     public function OnOrderRequestLinksChanged(?EventData $oEventData): void
     {
+        // Keep parent total in sync with its children
         $this->ComputeEstimatedTotalCost();
     }
 
@@ -132,7 +136,7 @@ class _OrderRequest extends Ticket
      * @param EventData $oEventData Event payload (used to detect attribute changes)
      * @return void
      */
-    public function OnOrderRequestComputeValues(EventData $oEventData)
+    public function OnOrderRequestComputeValues(EventData $oEventData): void
     {
         // Skip if no request type selected
         $iTypeId = (int) $this->Get('request_type_id');
@@ -140,15 +144,15 @@ class _OrderRequest extends Ticket
             return;
         }
 
-        // Only set if empty OR type has just changed
+        // Only set if empty OR type has just changed (avoids overwriting manual user choice)
         $aChanges = $this->ListChanges();
         $bTypeChanged = array_key_exists('request_type_id', $aChanges);
         $iCurrentApprover = (int) $this->Get('technical_approver_id');
         if (!$bTypeChanged && $iCurrentApprover > 0) {
-            return;
+            return; // respect existing selection
         }
 
-        // Read default approver from the selected type
+        // Read default approver from the selected type (defensive: use soft load)
         $oType = MetaModel::GetObject('OrderRequestType', $iTypeId, false);
         if (!$oType) {
             return;
@@ -163,6 +167,25 @@ class _OrderRequest extends Ticket
                 $this->Set('technical_approver_id', null);
             }
         }
+
+        // Normalize truthy values from enum/boolean ('1','yes','true') → boolean
+        $bRequiresBudget = in_array((string)$oType->Get('requires_budget_owner_approval'), ['1', 'yes', 'true'], true);
+
+        // Default budget approver from type if budget approval is required
+        if ($bRequiresBudget) {
+            $iBudget = (int)($oType->Get('budget_approver_id') ?: 0);
+            $iCurrentBudget = (int)($this->Get('budget_approver_id') ?: 0);
+            if ($bTypeChanged || $iCurrentBudget <= 0) {
+                $this->Set('budget_approver_id', $iBudget > 0 ? $iBudget : null);
+            }
+        } elseif ($bTypeChanged) {
+            // If switching to a non-budget type, clean related budget fields (keeps data coherent)
+            $this->Set('budget_approver_id', null);
+            $this->Set('budget_approval_request_date', null);
+            $this->Set('budget_approved_by_id', null);
+            $this->Set('budget_approval_date', null);
+            $this->Set('budget_approval_comment', null);
+        }
     }
 
     /**
@@ -176,10 +199,49 @@ class _OrderRequest extends Ticket
      */
     public function OnOrderRequestEnumTransitions(EventData $oEventData): void
     {
-        if ($this->Get('status') == 'draft') {
-            if ($this->HideSubmitIfNoItems()) {
-                $this->DenyTransition('ev_submit');
+        // Evaluate the budget rule once to drive which transitions are exposed
+        $bRequiresBudget = false;
+        $iTypeId = (int)$this->Get('request_type_id');
+        if ($iTypeId > 0) {
+            $oType = \MetaModel::GetObject('OrderRequestType', $iTypeId, false);
+            if ($oType) {
+                $bRequiresBudget = in_array((string)$oType->Get('requires_budget_owner_approval'), ['1', 'yes', 'true'], true);
             }
+        }
+
+        $sStatus = (string)$this->Get('status');
+
+        switch ($sStatus) {
+            case 'draft':
+                // No submission without at least one line item
+                if ($this->HideSubmitIfNoItems()) {
+                    $this->DenyTransition('ev_submit');
+                }
+                break;
+
+            case 'waiting_approval':
+                if ($bRequiresBudget) {
+                    // If budget approval is required, block direct technical approval to "approved"
+                    $this->DenyTransition('ev_approve');
+                    // Budget path stays available; validation is done in CheckToWrite
+                } else {
+                    // If no budget required, hide budget workflow
+                    $this->DenyTransition('ev_request_budget_approval');
+                }
+                break;
+
+            case 'waiting_budget_approval':
+                // Once in budget approval, technical approve shouldn't bypass it
+                $this->DenyTransition('ev_approve');
+                // Extra safety: if budget not really required (edge cases), hide budget approve
+                if (!$bRequiresBudget) {
+                    $this->DenyTransition('ev_budget_approve');
+                }
+                break;
+
+            default:
+                // Other states: keep default transitions
+                break;
         }
     }
 
@@ -193,20 +255,29 @@ class _OrderRequest extends Ticket
      * @param EventData $oEventData Event payload (used to detect applied stimulus)
      * @return void
      */
-    public function OnOrderRequestCheckToWrite(EventData $oEventData)
+    public function OnOrderRequestCheckToWrite(EventData $oEventData): void
     {
+        // Determine which stimulus is being applied as part of this write
         $sStimulus = (string) $oEventData->Get('stimulus_applied');
-        if ($sStimulus !== 'ev_submit') {
-            return;
-        }
 
-        $iId = (int) $this->GetKey();
-        $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
-        $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
-        $iCount = $oSet->Count();
+        if ($sStimulus === 'ev_submit') {
+            // Count line items of this order to enforce the "at least one" rule
+            $iId = (int) $this->GetKey();
+            $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
+            $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
+            $iCount = $oSet->Count();
 
-        if ($iCount < 1) {
-            $this->AddCheckIssues(\Dict::S('Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'));
+            if ($iCount < 1) {
+                // Blocking issue: user must add items before submit
+                $this->AddCheckIssues(\Dict::S('Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'));
+            }
+        } elseif ($sStimulus === 'ev_request_budget_approval') {
+            // Ensure a budget approver is provided when requesting budget approval
+            $iBudget = (int)($this->Get('budget_approver_id') ?: 0);
+            if ($iBudget <= 0) {
+                // Blocking issue: missing budget approver
+                $this->AddCheckIssues(\Dict::S('Class:OrderRequest/Error:BudgetApproverRequired'));
+            }
         }
     }
 
@@ -225,21 +296,21 @@ class _OrderRequest extends Ticket
      */
     public function OnOrderRequestBeforeWrite(EventData $oEventData): void
     {
-        // If the LinkedSet 'line_items' changed, recalculate totals
+        // Recalculate totals only if the linked set has effective changes
         $aChanges = $this->ListChanges();
         if (array_key_exists('line_items', $aChanges)) {
             $this->ComputeEstimatedTotalCost();
         }
 
-        // Keep date fields consistent
+        // Keep date fields consistent using iTop's internal format
         $sNow = date(AttributeDateTime::GetInternalFormat());
 
-        // Set creation date on initial write if not already set
+        // On first persist, ensure 'start_date' is initialized
         if ($oEventData->Get('is_new') === true && empty($this->Get('start_date'))) {
             $this->Set('start_date',  $sNow);
         }
 
-        // Always track the last technical update timestamp
+        // Track "last_update" on every write as a technical field
         $this->Set('last_update', $sNow);
     }
 
@@ -250,6 +321,7 @@ class _OrderRequest extends Ticket
      */
     public function HideSubmitIfNoItems(): bool
     {
+        // Count children without loading all rows (DBObjectSet::Count uses COUNT(*) internally)
         $iId = (int) $this->GetKey();
         $iCount = 0;
         if ($iId > 0) {
@@ -280,6 +352,7 @@ class _OrderRequest extends Ticket
         /** @var DBObjectSet $oSet Linked set of OrderRequestLineItem */
         $oSet = $this->Get('line_items');
         while ($oItem = $oSet->Fetch()) {
+            // Cast defensively; both attrs are user inputs
             $qty   = (int)($oItem->Get('quantity') ?: 0);
             $unit  = (float)($oItem->Get('unit_price_estimated') ?: 0);
             $total = $oItem->Get('total_price_estimated');
@@ -291,6 +364,7 @@ class _OrderRequest extends Ticket
             $fSum += (float)$total;
         }
 
+        // One assignment; persistence handled by iTop's save pipeline
         $this->Set('estimated_total_cost', $fSum);
     }
 }
