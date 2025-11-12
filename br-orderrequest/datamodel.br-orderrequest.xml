@@ -146,7 +146,9 @@
                 <field id="technical_approver_id" xsi:type="AttributeExternalKey">
                     <sql>technical_approver_id</sql>
                     <target_class>Person</target_class>
-                    <filter><![CDATA[SELECT Person WHERE org_id = :this->org_id]]></filter>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
                     <dependencies>
                         <attribute id="org_id" />
                         <attribute id="request_type_id" />
@@ -551,7 +553,7 @@
                                 <target>procurement</target>
                                 <flags>
                                     <attribute id="procurement_reference">
-                                        <mandatory />
+                                        <must_prompt />
                                     </attribute>
                                 </flags>
                                 <actions />
@@ -1266,7 +1268,9 @@
                 <field id="default_approver_id" xsi:type="AttributeExternalKey">
                     <sql>default_approver_id</sql>
                     <target_class>Person</target_class>
-                    <filter><![CDATA[SELECT Person WHERE org_id = :this->org_id]]></filter>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
                     <dependencies>
                         <attribute id="org_id" />
                     </dependencies>
