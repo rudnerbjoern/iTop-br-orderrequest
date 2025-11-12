@@ -1204,6 +1204,10 @@
         <!-- ***************** Typology ***************** -->
         <class id="OrderRequestType" _delta="define">
             <parent>cmdbAbstractObject</parent>
+            <php_parent>
+                <name>BR\Extension\OrderRequest\Model\_OrderRequestType</name>
+                <file>src/Model/_OrderRequestType.php</file>
+            </php_parent>
             <properties>
                 <category>bizmodel,searchable,application</category>
                 <abstract>false</abstract>
@@ -1313,7 +1317,36 @@
                     <is_null_allowed>false</is_null_allowed>
                     <default_value>no</default_value>
                 </field>
+                <field id="budget_approver_id" xsi:type="AttributeExternalKey">
+                    <sql>budget_approver_id</sql>
+                    <target_class>Person</target_class>
+                    <filter>
+                        <![CDATA[SELECT Person AS P JOIN Organization AS Node ON P.org_id = Node.id JOIN Organization AS Root ON Node.parent_id BELOW Root.id WHERE Root.id = :this->org_id]]>
+                    </filter>
+                    <dependencies>
+                        <attribute id="org_id" />
+                        <attribute id="requires_budget_owner_approval" />
+                    </dependencies>
+                    <is_null_allowed>true</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="budget_approver_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>budget_approver_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
             </fields>
+            <event_listeners>
+                <event_listener id="OnOrderRequestTypeSetAttributesFlags">
+                    <event>EVENT_DB_SET_ATTRIBUTES_FLAGS</event>
+                    <callback>OnOrderRequestTypeSetAttributesFlags</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnOrderRequestTypeCheckToWrite">
+                    <event>EVENT_DB_CHECK_TO_WRITE</event>
+                    <callback>OnOrderRequestTypeCheckToWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+            </event_listeners>
             <methods />
             <presentation>
                 <details>
@@ -1330,14 +1363,17 @@
                         <item id="status">
                             <rank>40</rank>
                         </item>
-                        <item id="requires_budget_owner_approval">
+                        <item id="default_approver_id">
                             <rank>50</rank>
                         </item>
-                        <item id="default_approver_id">
+                        <item id="requires_budget_owner_approval">
                             <rank>60</rank>
                         </item>
-                        <item id="description">
+                        <item id="budget_approver_id">
                             <rank>70</rank>
+                        </item>
+                        <item id="description">
+                            <rank>80</rank>
                         </item>
                     </items>
                 </details>
@@ -1355,33 +1391,39 @@
                         <item id="status">
                             <rank>40</rank>
                         </item>
-                        <item id="requires_budget_owner_approval">
+                        <item id="default_approver_id">
                             <rank>50</rank>
                         </item>
-                        <item id="default_approver_id">
+                        <item id="requires_budget_owner_approval">
                             <rank>60</rank>
                         </item>
-                        <item id="description">
+                        <item id="budget_approver_id">
                             <rank>70</rank>
+                        </item>
+                        <item id="description">
+                            <rank>80</rank>
                         </item>
                     </items>
                 </search>
                 <list>
                     <items>
                         <item id="org_id">
-                            <rank>10</rank>
-                        </item>
-                        <item id="status">
                             <rank>20</rank>
                         </item>
-                        <item id="code">
+                        <item id="status">
                             <rank>30</rank>
                         </item>
-                        <item id="requires_budget_owner_approval">
+                        <item id="code">
                             <rank>40</rank>
                         </item>
                         <item id="default_approver_id">
                             <rank>50</rank>
+                        </item>
+                        <item id="requires_budget_owner_approval">
+                            <rank>60</rank>
+                        </item>
+                        <item id="budget_approver_id">
+                            <rank>70</rank>
                         </item>
                     </items>
                 </list>

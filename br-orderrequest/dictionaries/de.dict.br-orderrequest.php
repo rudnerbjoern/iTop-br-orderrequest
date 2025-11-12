@@ -49,6 +49,13 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequestType/Attribute:code'     => 'Code',
     'Class:OrderRequestType/Attribute:code+'    => 'Kurzer eindeutiger Code (pro Organisation).',
 
+    'Class:OrderRequestType/Attribute:status'   => 'Status',
+    'Class:OrderRequestType/Attribute:status+'  => 'Steuert, ob der Typ in neuen Anfragen auswählbar ist.',
+    'Class:OrderRequestType/Attribute:status/Value:active'   => 'Aktiv',
+    'Class:OrderRequestType/Attribute:status/Value:active+'  => 'Typ ist in Bestellanforderungen auswählbar.',
+    'Class:OrderRequestType/Attribute:status/Value:inactive' => 'Inaktiv',
+    'Class:OrderRequestType/Attribute:status/Value:inactive+' => 'Typ ist in neuen Bestellanforderungen nicht auswählbar.',
+
     'Class:OrderRequestType/Attribute:description'   => 'Beschreibung',
     'Class:OrderRequestType/Attribute:description+'  => 'Optionale funktionale/technische Beschreibung.',
 
@@ -57,17 +64,17 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequestType/Attribute:default_approver_name' => 'Standard-Genehmiger (Name)',
     'Class:OrderRequestType/Attribute:default_approver_name+' => 'Lesbarer Name des technischen Standard-Genehmigers.',
 
-    'Class:OrderRequestType/Attribute:status'   => 'Status',
-    'Class:OrderRequestType/Attribute:status+'  => 'Steuert, ob der Typ in neuen Anfragen auswählbar ist.',
-    'Class:OrderRequestType/Attribute:status/Value:active'   => 'Aktiv',
-    'Class:OrderRequestType/Attribute:status/Value:active+'  => 'Typ ist in Bestellanforderungen auswählbar.',
-    'Class:OrderRequestType/Attribute:status/Value:inactive' => 'Inaktiv',
-    'Class:OrderRequestType/Attribute:status/Value:inactive+' => 'Typ ist in neuen Bestellanforderungen nicht auswählbar.',
-
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval'   => 'Genehmigung durch Budgetverantwortliche:n',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval+'  => 'Falls „Ja“, ist zusätzlich die Genehmigung durch die/den Budgetverantwortliche:n erforderlich.',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:yes' => 'ja',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:no'  => 'nein',
+
+    'Class:OrderRequestType/Attribute:budget_approver_id'    => 'Budget-Genehmiger',
+    'Class:OrderRequestType/Attribute:budget_approver_id+'   => 'Person, die die Budgetfreigabe erteilt.',
+    'Class:OrderRequestType/Attribute:budget_approver_name'  => 'Budget-Genehmiger (Name)',
+    'Class:OrderRequestType/Attribute:budget_approver_name+' => 'Lesbarer Name des Budget-Genehmigers.',
+
+    'Class:OrderRequestType/Error:BudgetApproverRequired' => 'Ein Budget-Genehmiger ist erforderlich, wenn „Budgetfreigabe erforderlich“ auf Ja gesetzt ist.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────

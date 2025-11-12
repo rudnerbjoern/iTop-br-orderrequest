@@ -49,6 +49,13 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestType/Attribute:code'     => 'Code',
     'Class:OrderRequestType/Attribute:code+'    => 'Short unique code for this type (per organization).',
 
+    'Class:OrderRequestType/Attribute:status'   => 'Status',
+    'Class:OrderRequestType/Attribute:status+'  => 'Whether the type can be selected on new requests.',
+    'Class:OrderRequestType/Attribute:status/Value:active'   => 'Active',
+    'Class:OrderRequestType/Attribute:status/Value:active+'  => 'Type is selectable on Order Requests.',
+    'Class:OrderRequestType/Attribute:status/Value:inactive' => 'Inactive',
+    'Class:OrderRequestType/Attribute:status/Value:inactive+' => 'Type cannot be selected on new Order Requests.',
+
     'Class:OrderRequestType/Attribute:description'   => 'Description',
     'Class:OrderRequestType/Attribute:description+'  => 'Optional functional/technical description for the type.',
 
@@ -57,17 +64,17 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestType/Attribute:default_approver_name' => 'Default technical approver (name)',
     'Class:OrderRequestType/Attribute:default_approver_name+' => 'Readable name of the default technical approver.',
 
-    'Class:OrderRequestType/Attribute:status'   => 'Status',
-    'Class:OrderRequestType/Attribute:status+'  => 'Whether the type can be selected on new requests.',
-    'Class:OrderRequestType/Attribute:status/Value:active'   => 'Active',
-    'Class:OrderRequestType/Attribute:status/Value:active+'  => 'Type is selectable on Order Requests.',
-    'Class:OrderRequestType/Attribute:status/Value:inactive' => 'Inactive',
-    'Class:OrderRequestType/Attribute:status/Value:inactive+' => 'Type cannot be selected on new Order Requests.',
-
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval'   => 'Requires budget owner approval',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval+'  => 'If set to "Yes", an additional budget owner approval is required.',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:yes' => 'yes',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:no'  => 'no',
+
+    'Class:OrderRequestType/Attribute:budget_approver_id'    => 'Budget approver',
+    'Class:OrderRequestType/Attribute:budget_approver_id+'   => 'Person responsible for budget approval.',
+    'Class:OrderRequestType/Attribute:budget_approver_name'  => 'Budget approver (name)',
+    'Class:OrderRequestType/Attribute:budget_approver_name+' => 'Readable name of the budget approver.',
+
+    'Class:OrderRequestType/Error:BudgetApproverRequired' => 'A budget approver is required when "Requires budget owner approval" is set to Yes.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────
