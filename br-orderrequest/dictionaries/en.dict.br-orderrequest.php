@@ -57,7 +57,6 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestType/Attribute:default_approver_name' => 'Default technical approver (name)',
     'Class:OrderRequestType/Attribute:default_approver_name+' => 'Readable name of the default technical approver.',
 
-
     'Class:OrderRequestType/Attribute:status'   => 'Status',
     'Class:OrderRequestType/Attribute:status+'  => 'Whether the type can be selected on new requests.',
     'Class:OrderRequestType/Attribute:status/Value:active'   => 'Active',
@@ -65,15 +64,10 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestType/Attribute:status/Value:inactive' => 'Inactive',
     'Class:OrderRequestType/Attribute:status/Value:inactive+' => 'Type cannot be selected on new Order Requests.',
 
-
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval'   => 'Requires budget owner approval',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval+'  => 'If set to "Yes", an additional budget owner approval is required.',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:yes' => 'yes',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:no'  => 'no',
-
-    // Optional (only if you add such a field later)
-    'Class:OrderRequestType/Attribute:cost_center_default'   => 'Default cost center',
-    'Class:OrderRequestType/Attribute:cost_center_default+'  => 'Optional default cost center to prefill on requests.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,19 +101,14 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:status/Value:closed'           => 'Closed',
     'Class:OrderRequest/Attribute:status/Value:closed+'          => 'Completed and closed.',
 
-
     'Class:OrderRequest/Attribute:request_type_id'   => 'Request type',
     'Class:OrderRequest/Attribute:request_type_id+'  => 'Type/category of the order (e.g., Server, Network, Firewall).',
     'Class:OrderRequest/Attribute:request_type_name' => 'Request type name',
     'Class:OrderRequest/Attribute:request_type_name+' => 'Readable name of the request type.',
 
-
     'Class:OrderRequest/Attribute:description' => 'Business justification',
     'Class:OrderRequest/Attribute:description+' => 'Why is this needed? Compliance, audit, business impact...',
 
-    // Optional attributes (only if you add them to the XML)
-    'Class:OrderRequest/Attribute:cost_center' => 'Cost center',
-    'Class:OrderRequest/Attribute:cost_center+' => 'Billing cost center for this request.',
     'Class:OrderRequest/Attribute:expected_delivery_date' => 'Expected delivery date',
     'Class:OrderRequest/Attribute:expected_delivery_date+' => 'Desired delivery/ready date.',
 
@@ -131,12 +120,10 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:technical_approver_name' => 'Technical approver name',
     'Class:OrderRequest/Attribute:technical_approver_name+' => 'Readable name of the technical approver.',
 
-
     'Class:OrderRequest/Attribute:approved_by_id'   => 'Approved by / Rejected by',
     'Class:OrderRequest/Attribute:approved_by_id+'  => 'Person who approved or rejected the request.',
     'Class:OrderRequest/Attribute:approved_by_name' => 'Approved by (name)',
     'Class:OrderRequest/Attribute:approved_by_name+' => 'Readable name of the approver/rejector.',
-
 
     'Class:OrderRequest/Attribute:approval_comment'       => 'Approval comment',
     'Class:OrderRequest/Attribute:approval_comment+'      => 'Decision rationale or constraints given by approver.',
@@ -145,14 +132,11 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:approval_date'          => 'Approval decision on',
     'Class:OrderRequest/Attribute:approval_date+'         => 'Timestamp of approve/reject decision.',
 
-
     'Class:OrderRequest/Attribute:procurement_reference'   => 'Procurement reference',
     'Class:OrderRequest/Attribute:procurement_reference+'  => 'Reference used by purchasing (e.g., PO number, request ID).',
 
-
     'Class:OrderRequest/Attribute:line_items'       => 'Line items',
     'Class:OrderRequest/Attribute:line_items+'      => 'Requested items/services grouped as line items.',
-
 
     'Class:OrderRequest/Attribute:parent_request_id'  => 'Related request',
     'Class:OrderRequest/Attribute:parent_request_id+' => 'Related user request (if any).',
@@ -165,7 +149,6 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:parent_change_ref'  => 'Related change ref',
     'Class:OrderRequest/Attribute:related_request_list' => 'Child requests',
     'Class:OrderRequest/Attribute:related_request_list+' => 'User requests referencing this order request.',
-
 
     'Class:OrderRequest/Stimulus:ev_submit'           => 'Submit',
     'Class:OrderRequest/Stimulus:ev_review'           => 'Start review',
@@ -232,5 +215,4 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestLineItem/Error:UnitPriceNegative'      => 'Estimated unit price cannot be negative.',
     'Class:OrderRequestLineItem/Error:UomRequired'            => 'Unit of measure is required.',
     'Class:OrderRequestLineItem/Warning:DuplicateNameUom'     => 'There is already a line with the same name and unit.',
-
 ));

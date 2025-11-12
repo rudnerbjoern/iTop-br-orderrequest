@@ -68,10 +68,6 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval+'  => 'Falls „Ja“, ist zusätzlich die Genehmigung durch die/den Budgetverantwortliche:n erforderlich.',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:yes' => 'ja',
     'Class:OrderRequestType/Attribute:requires_budget_owner_approval/Value:no'  => 'nein',
-
-    // Optional (nur verwenden, wenn das Feld im XML vorhanden ist)
-    'Class:OrderRequestType/Attribute:cost_center_default'   => 'Standard-Kostenstelle',
-    'Class:OrderRequestType/Attribute:cost_center_default+'  => 'Optionale Standard-Kostenstelle zur Vorbelegung in Anfragen.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -113,9 +109,6 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequest/Attribute:description' => 'Fachliche Begründung',
     'Class:OrderRequest/Attribute:description+' => 'Warum wird dies benötigt? Compliance, Audit, Business Impact …',
 
-    // Optional (nur verwenden, wenn im XML vorhanden)
-    'Class:OrderRequest/Attribute:cost_center' => 'Kostenstelle',
-    'Class:OrderRequest/Attribute:cost_center+' => 'Verrechnete Kostenstelle.',
     'Class:OrderRequest/Attribute:expected_delivery_date' => 'Erwartetes Lieferdatum',
     'Class:OrderRequest/Attribute:expected_delivery_date+' => 'Gewünschter Liefer-/Bereitstellungstermin.',
 
