@@ -301,7 +301,24 @@ class _OrderRequestLineItem extends cmdbAbstractObject
      */
     public function OnLineItemCheckToDelete(EventData $oEventData): void
     {
-        if (!$this->isParentEditable()) {
+        // Resolve parent
+        $iOrderId = (int)($this->Get('order_request_id') ?: 0);
+        if ($iOrderId <= 0) {
+            // Kein Parent aufgelöst -> nicht blockieren (UI/REST wird ohnehin scheitern, wenn es keinen Parent gibt)
+            return;
+        }
+
+        /** @var \DBObject|null $oParent */
+        $oParent = \MetaModel::GetObject('OrderRequest', $iOrderId, false);
+        if (!$oParent) {
+            // Parent nicht ladbar -> defensiv NICHT blockieren
+            return;
+        }
+
+        $sStatus = (string)$oParent->Get('status');
+
+        // Löschen in 'draft', 'closed' **und** 'rejected' erlauben
+        if (!in_array($sStatus, ['draft', 'closed', 'rejected'], true)) {
             $this->AddDeleteIssue(\Dict::S('Class:OrderRequestLineItem/Error:ParentNotEditable'));
         }
     }

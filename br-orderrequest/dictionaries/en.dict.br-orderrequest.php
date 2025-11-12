@@ -229,10 +229,29 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestLineItem/Attribute:total_price_estimated'  => 'Estimated total',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated+' => 'Auto-computed as quantity × estimated unit price.',
 
+    'Class:OrderRequestLineItem/Attribute:functionalcis_list' => 'Linked CIs',
+
     // Validation messages (used in PHP)
     'Class:OrderRequestLineItem/Error:ParentNotEditable'      => 'This line item cannot be modified because the related Order Request is no longer in "draft" status.',
     'Class:OrderRequestLineItem/Error:QtyMustBePositive'      => 'Quantity must be greater than 0.',
     'Class:OrderRequestLineItem/Error:UnitPriceNegative'      => 'Estimated unit price cannot be negative.',
     'Class:OrderRequestLineItem/Error:UomRequired'            => 'Unit of measure is required.',
     'Class:OrderRequestLineItem/Warning:DuplicateNameUom'     => 'There is already a line with the same name and unit.',
+));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Class: lnkOrderRequestLineItemToFunctionalCI
+// ─────────────────────────────────────────────────────────────────────────────
+/** @disregard P1009 Undefined type Dict */
+Dict::Add('EN US', 'English', 'English', array(
+    'Class:lnkOrderRequestLineItemToFunctionalCI' => 'Line Item / Functional CI',
+    'Class:lnkOrderRequestLineItemToFunctionalCI+' => 'Links an Order Request line item to a Functional CI.',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:order_request_line_item_id' => 'Line item',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:order_request_line_item_name' => 'Line item name',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:order_request_ref' => 'Order request',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_id' => 'Functional CI',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_name' => 'Functional CI name',
+    'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:comment' => 'Comment',
+
+
 ));

@@ -10,7 +10,7 @@
 /** @disregard P1009 Undefined type SetupWebPage - The SetupWebPage class is provided by iTop during module registration. */
 SetupWebPage::AddModule(
     __FILE__, // Path to the current file, all other file names are relative to the directory containing this file
-    'br-orderrequest/0.1.0',
+    'br-orderrequest/0.2.0',
     array(
         // Identification
         //

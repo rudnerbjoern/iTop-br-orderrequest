@@ -260,7 +260,7 @@
                 <field id="parent_request_id" xsi:type="AttributeExternalKey">
                     <sql>parent_request_id</sql>
                     <target_class>UserRequest</target_class>
-                    <filter><![CDATA[SELECT UserRequest WHERE id != :this->id AND status NOT IN ('rejected','resolved','closed')]]></filter>
+                    <filter><![CDATA[SELECT UserRequest WHERE status NOT IN ('rejected','resolved','closed')]]></filter>
                     <dependencies />
                     <is_null_allowed>true</is_null_allowed>
                     <on_target_delete>DEL_MANUAL</on_target_delete>
@@ -272,7 +272,7 @@
                 <field id="parent_incident_id" xsi:type="AttributeExternalKey">
                     <sql>parent_incident_id</sql>
                     <target_class>Incident</target_class>
-                    <filter><![CDATA[SELECT Incident WHERE status != "closed"]]></filter>
+                    <filter><![CDATA[SELECT Incident WHERE status != 'closed']]></filter>
                     <is_null_allowed>true</is_null_allowed>
                     <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
@@ -293,7 +293,7 @@
                 <field id="parent_change_id" xsi:type="AttributeExternalKey">
                     <sql>parent_change_id</sql>
                     <target_class>Change</target_class>
-                    <filter><![CDATA[SELECT Change WHERE status != "closed"]]></filter>
+                    <filter><![CDATA[SELECT Change WHERE status != 'closed']]></filter>
                     <is_null_allowed>true</is_null_allowed>
                     <on_target_delete>DEL_MANUAL</on_target_delete>
                 </field>
@@ -1307,6 +1307,13 @@
                         <attribute id="unit_price_estimated" />
                     </dependencies>
                 </field>
+                <field id="functionalcis_list" xsi:type="AttributeLinkedSet">
+                    <linked_class>lnkOrderRequestLineItemToFunctionalCI</linked_class>
+                    <ext_key_to_me>order_request_line_item_id</ext_key_to_me>
+                    <edit_mode>add_remove</edit_mode>
+                    <count_min>0</count_min>
+                    <count_max>0</count_max>
+                </field>
             </fields>
             <event_listeners>
                 <event_listener id="OnLineItemSetInitialAttributesFlags">
@@ -1396,6 +1403,9 @@
                                 </item>
                             </items>
                         </item>
+                        <item id="functionalcis_list">
+                            <rank>100</rank>
+                        </item>
                     </items>
                 </details>
                 <list>
@@ -1469,6 +1479,86 @@
                 </summary>
             </presentation>
         </class>
+        <class id="lnkOrderRequestLineItemToFunctionalCI" _delta="define">
+            <parent>cmdbAbstractObject</parent>
+            <properties>
+                <category>bizmodel,searchable,application</category>
+                <abstract>false</abstract>
+                <key_type>autoincrement</key_type>
+                <db_table>lnkorderrequestlineitemtofunctionalci</db_table>
+                <db_key_field>id</db_key_field>
+                <db_final_class_field />
+                <naming>
+                    <attributes>
+                        <attribute id="order_request_line_item_id" />
+                        <attribute id="functionalci_id" />
+                    </attributes>
+                </naming>
+                <uniqueness_rules>
+                    <rule id="unique_item_ci">
+                        <attributes>
+                            <attribute id="order_request_line_item_id" />
+                            <attribute id="functionalci_id" />
+                        </attributes>
+                        <is_blocking>true</is_blocking>
+                    </rule>
+                </uniqueness_rules>
+                <is_link>1</is_link>
+            </properties>
+            <fields>
+                <field id="order_request_line_item_id" xsi:type="AttributeExternalKey">
+                    <sql>order_request_line_item_id</sql>
+                    <target_class>OrderRequestLineItem</target_class>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="order_request_line_item_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>order_request_line_item_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <!-- Optional hilfreich: direkte Anzeige der OR-Referenz -->
+                <field id="order_request_ref" xsi:type="AttributeExternalField">
+                    <extkey_attcode>order_request_line_item_id</extkey_attcode>
+                    <target_attcode>order_request_ref</target_attcode>
+                </field>
+                <field id="functionalci_id" xsi:type="AttributeExternalKey">
+                    <sql>functionalci_id</sql>
+                    <target_class>FunctionalCI</target_class>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="functionalci_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>functionalci_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+            </fields>
+            <methods />
+            <presentation>
+                <details>
+                    <items>
+                        <item id="order_request_ref" />
+                        <item id="order_request_line_item_name" />
+                        <item id="functionalci_id" />
+                    </items>
+                </details>
+                <list>
+                    <items>
+                        <item id="order_request_ref" />
+                        <item id="order_request_line_item_name" />
+                        <item id="functionalci_name" />
+                    </items>
+                </list>
+                <search>
+                    <items>
+                        <item id="order_request_ref" />
+                        <item id="order_request_line_item_name" />
+                        <item id="functionalci_name" />
+                    </items>
+                </search>
+            </presentation>
+        </class>
+
+
         <!-- ***************** Typology ***************** -->
         <class id="OrderRequestType" _delta="define">
             <parent>cmdbAbstractObject</parent>
