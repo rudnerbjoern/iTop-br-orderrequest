@@ -99,6 +99,7 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:status/Value:in_review+'       => 'Under internal review.',
     'Class:OrderRequest/Attribute:status/Value:waiting_approval' => 'Waiting for approval',
     'Class:OrderRequest/Attribute:status/Value:waiting_approval+' => 'Awaiting technical approval.',
+    'Class:OrderRequest/Attribute:status/Value:waiting_budget_approval' => 'Waiting budget approval',
     'Class:OrderRequest/Attribute:status/Value:approved'         => 'Approved',
     'Class:OrderRequest/Attribute:status/Value:approved+'        => 'Approved by the technical approver.',
     'Class:OrderRequest/Attribute:status/Value:rejected'         => 'Rejected',
@@ -139,6 +140,14 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:approval_date'          => 'Approval decision on',
     'Class:OrderRequest/Attribute:approval_date+'         => 'Timestamp of approve/reject decision.',
 
+    'Class:OrderRequest/Attribute:budget_approver_id' => 'Budget approver',
+    'Class:OrderRequest/Attribute:budget_approver_name' => 'Budget approver (name)',
+    'Class:OrderRequest/Attribute:budget_approval_request_date' => 'Budget approval requested on',
+    'Class:OrderRequest/Attribute:budget_approved_by_id' => 'Budget approved/rejected by',
+    'Class:OrderRequest/Attribute:budget_approved_by_name' => 'Budget approver (name)',
+    'Class:OrderRequest/Attribute:budget_approval_comment' => 'Budget approval comment',
+    'Class:OrderRequest/Attribute:budget_approval_date' => 'Budget approval decision on',
+
     'Class:OrderRequest/Attribute:procurement_reference'   => 'Procurement reference',
     'Class:OrderRequest/Attribute:procurement_reference+'  => 'Reference used by purchasing (e.g., PO number, request ID).',
 
@@ -164,9 +173,13 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Stimulus:ev_reject'           => 'Reject',
     'Class:OrderRequest/Stimulus:ev_procure'          => 'Send to procurement',
     'Class:OrderRequest/Stimulus:ev_close'            => 'Close',
+    'Class:OrderRequest/Stimulus:ev_request_budget_approval' => 'Request budget approval',
+    'Class:OrderRequest/Stimulus:ev_budget_approve' => 'Approve budget',
+    'Class:OrderRequest/Stimulus:ev_budget_reject' => 'Reject budget',
 
     // Validation messages (used in PHP)
     'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit' => 'Please add at least one line item before submitting.',
+    'Class:OrderRequest/Error:BudgetApproverRequired' => 'Please select a budget approver before requesting budget approval.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────

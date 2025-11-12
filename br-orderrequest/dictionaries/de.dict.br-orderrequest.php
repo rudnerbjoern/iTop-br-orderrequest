@@ -99,6 +99,7 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequest/Attribute:status/Value:in_review+'       => 'Interne Sichtung/Prüfung läuft.',
     'Class:OrderRequest/Attribute:status/Value:waiting_approval' => 'Wartet auf Genehmigung',
     'Class:OrderRequest/Attribute:status/Value:waiting_approval+' => 'Genehmigung steht aus.',
+    'Class:OrderRequest/Attribute:status/Value:waiting_budget_approval' => 'Wartet auf Budgetfreigabe',
     'Class:OrderRequest/Attribute:status/Value:approved'         => 'Genehmigt',
     'Class:OrderRequest/Attribute:status/Value:approved+'        => 'Technisch genehmigt.',
     'Class:OrderRequest/Attribute:status/Value:rejected'         => 'Abgelehnt',
@@ -139,6 +140,14 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequest/Attribute:approval_date'          => 'Entscheidung am',
     'Class:OrderRequest/Attribute:approval_date+'         => 'Zeitpunkt der Genehmigung/Ablehnung.',
 
+    'Class:OrderRequest/Attribute:budget_approver_id' => 'Budget-Genehmiger',
+    'Class:OrderRequest/Attribute:budget_approver_name' => 'Budget-Genehmiger (Name)',
+    'Class:OrderRequest/Attribute:budget_approval_request_date' => 'Budgetfreigabe angefordert am',
+    'Class:OrderRequest/Attribute:budget_approved_by_id' => 'Budget freigegeben/abgelehnt von',
+    'Class:OrderRequest/Attribute:budget_approved_by_name' => 'Budget-Genehmiger (Name)',
+    'Class:OrderRequest/Attribute:budget_approval_comment' => 'Kommentar Budgetfreigabe',
+    'Class:OrderRequest/Attribute:budget_approval_date' => 'Budgetentscheidung am',
+
     'Class:OrderRequest/Attribute:procurement_reference'   => 'Beschaffungsreferenz',
     'Class:OrderRequest/Attribute:procurement_reference+'  => 'Referenz des Einkaufs (z. B. Bestellnummer/PO, Request-ID).',
 
@@ -164,8 +173,12 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequest/Stimulus:ev_reject'           => 'Ablehnen',
     'Class:OrderRequest/Stimulus:ev_procure'          => 'An Beschaffung übergeben',
     'Class:OrderRequest/Stimulus:ev_close'            => 'Schließen',
+    'Class:OrderRequest/Stimulus:ev_request_budget_approval' => 'Budgetfreigabe anfordern',
+    'Class:OrderRequest/Stimulus:ev_budget_approve' => 'Budget freigeben',
+    'Class:OrderRequest/Stimulus:ev_budget_reject' => 'Budget ablehnen',
 
     'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit' => 'Bitte fügen Sie vor dem Einreichen mindestens eine Position hinzu.',
+    'Class:OrderRequest/Error:BudgetApproverRequired' => 'Bitte einen Budget-Genehmiger auswählen, bevor die Budgetfreigabe angefordert wird.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────
