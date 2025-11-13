@@ -12,7 +12,7 @@
  *
  * @copyright   Copyright (C) 2025 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-11
+ * @version     2025-11-13
  */
 
 namespace BR\Extension\OrderRequest\Model;
@@ -32,6 +32,51 @@ use AttributeDateTime;
  */
 class _OrderRequest extends Ticket
 {
+
+    /**
+     * Module configuration
+     */
+    private const MODULE = 'br-orderrequest';
+    private const POLICY_MODES = ['off', 'warn', 'enforce'];
+
+    /** @return string off|warn|enforce */
+    public static function GetConfigPolicyMode(): string
+    {
+        try {
+            $s = (string) \MetaModel::GetModuleSetting(self::MODULE, 'policy_mode', 'warn');
+            return in_array($s, self::POLICY_MODES, true) ? $s : 'warn';
+        } catch (\Throwable $e) {
+            return 'warn';
+        }
+    }
+
+    public static function GetConfigApprovalRestrictToAssignedApprover(): bool
+    {
+        try {
+            return (bool) \MetaModel::GetModuleSetting(self::MODULE, 'approval_restrict_to_assigned_approver', true);
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    public static function GetConfigApprovalForbidSelfApproval(): bool
+    {
+        try {
+            return (bool) \MetaModel::GetModuleSetting(self::MODULE, 'approval_forbid_self_approval', true);
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    public static function GetConfigBudgetAutoThreshold(): int
+    {
+        try {
+            $i = (int) \MetaModel::GetModuleSetting(self::MODULE, 'budget_auto_threshold', 0);
+            return ($i > 0) ? $i : 0;
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
 
     /**
      * Defines the human-readable reference format for this ticket.
@@ -199,7 +244,25 @@ class _OrderRequest extends Ticket
      */
     public function OnOrderRequestEnumTransitions(EventData $oEventData): void
     {
-        // Evaluate the budget rule once to drive which transitions are exposed
+        // --- Konfiguration / Kontext ---
+        $sPolicyMode  = (string) self::GetConfigPolicyMode();          // off | warn | enforce
+        $bEnforce     = ($sPolicyMode === 'enforce');
+        $bRestrict    = (bool)   self::GetConfigApprovalRestrictToAssignedApprover();
+        $bNoSelf      = (bool)   self::GetConfigApprovalForbidSelfApproval();
+        $iThreshold   = (int)    self::GetConfigBudgetAutoThreshold();
+
+        $iCurrentPid  = 0;
+        try {
+            $iCurrentPid = (int) \UserRights::GetContactId();
+        } catch (\Throwable $e) { /* noop */
+        }
+
+        $iCallerId         = (int)($this->Get('caller_id') ?: 0);
+        $iTechApproverId   = (int)($this->Get('technical_approver_id') ?: 0);
+        $iBudgetApproverId = (int)($this->Get('budget_approver_id') ?: 0);
+        $fEstimated        = (float)($this->Get('estimated_total_cost') ?: 0);
+
+        // Evaluierung Typ-Flag: benötigt dieser Type grundsätzlich Budget-Freigabe?
         $bRequiresBudget = false;
         $iTypeId = (int)$this->Get('request_type_id');
         if ($iTypeId > 0) {
@@ -220,21 +283,46 @@ class _OrderRequest extends Ticket
                 break;
 
             case 'waiting_approval':
+                // Wenn der Typ Budget verlangt, direkte technische Freigabe ausschließen
                 if ($bRequiresBudget) {
-                    // If budget approval is required, block direct technical approval to "approved"
                     $this->DenyTransition('ev_approve');
-                    // Budget path stays available; validation is done in CheckToWrite
                 } else {
-                    // If no budget required, hide budget workflow
+                    // Kein Budget-Flow sichtbar, wenn nicht gefordert
                     $this->DenyTransition('ev_request_budget_approval');
+                }
+
+                // Policy: Budget-Threshold erzwingt Budget-Flow (nur im ENFORCE-Mode UI-seitig verstecken)
+                if ($bEnforce && $iThreshold > 0 && $fEstimated >= $iThreshold) {
+                    $this->DenyTransition('ev_approve');
+                }
+
+                // Policy: Nur zugewiesener technischer Genehmiger darf approven (ENFORCE)
+                if ($bEnforce && $bRestrict && $iTechApproverId > 0 && $iCurrentPid !== $iTechApproverId) {
+                    $this->DenyTransition('ev_approve');
+                }
+
+                // Policy: Self-Approval verbieten (ENFORCE)
+                if ($bEnforce && $bNoSelf && $iCallerId > 0 && $iCurrentPid === $iCallerId) {
+                    $this->DenyTransition('ev_approve');
                 }
                 break;
 
             case 'waiting_budget_approval':
-                // Once in budget approval, technical approve shouldn't bypass it
+                // In Budgetphase keine technische Direktfreigabe
                 $this->DenyTransition('ev_approve');
-                // Extra safety: if budget not really required (edge cases), hide budget approve
+
+                // Wenn Budget eigentlich nicht nötig ist, Budget-Approve ausblenden
                 if (!$bRequiresBudget) {
+                    $this->DenyTransition('ev_budget_approve');
+                }
+
+                // Policy: Nur zugewiesener Budget-Genehmiger darf budget-approven (ENFORCE)
+                if ($bEnforce && $bRestrict && $iBudgetApproverId > 0 && $iCurrentPid !== $iBudgetApproverId) {
+                    $this->DenyTransition('ev_budget_approve');
+                }
+
+                // Policy: Self-Approval verbieten (ENFORCE)
+                if ($bEnforce && $bNoSelf && $iCallerId > 0 && $iCurrentPid === $iCallerId) {
                     $this->DenyTransition('ev_budget_approve');
                 }
                 break;
@@ -260,24 +348,89 @@ class _OrderRequest extends Ticket
         // Determine which stimulus is being applied as part of this write
         $sStimulus = (string) $oEventData->Get('stimulus_applied');
 
-        if ($sStimulus === 'ev_submit') {
-            // Count line items of this order to enforce the "at least one" rule
-            $iId = (int) $this->GetKey();
-            $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
-            $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
-            $iCount = $oSet->Count();
+        // --- Gemeinsamer Policy-Kontext ---
+        $sPolicyMode = (string) self::GetConfigPolicyMode(); // off | warn | enforce
+        $bWarn       = ($sPolicyMode === 'warn');
+        $bEnforce    = ($sPolicyMode === 'enforce');
 
-            if ($iCount < 1) {
-                // Blocking issue: user must add items before submit
-                $this->AddCheckIssues(\Dict::S('Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'));
+        $bRestrict   = (bool) self::GetConfigApprovalRestrictToAssignedApprover();
+        $bNoSelf     = (bool) self::GetConfigApprovalForbidSelfApproval();
+        $iThreshold  = (int)  self::GetConfigBudgetAutoThreshold();
+
+        $iCurrentPid = 0;
+        try {
+            $iCurrentPid = (int) \UserRights::GetContactId();
+        } catch (\Throwable $e) { /* noop */
+        }
+
+        $iCallerId         = (int)($this->Get('caller_id') ?: 0);
+        $iTechApproverId   = (int)($this->Get('technical_approver_id') ?: 0);
+        $iBudgetApproverId = (int)($this->Get('budget_approver_id') ?: 0);
+        $fEstimated        = (float)($this->Get('estimated_total_cost') ?: 0);
+
+        // Helper zum Ausspielen von Policy-Verstößen (blocking im ENFORCE, sonst Warnung in WARN)
+        $policyFail = function (string $sDictKey, array $aParams = []) use ($bEnforce, $bWarn) {
+            $sMsg = empty($aParams) ? \Dict::S($sDictKey) : vsprintf(\Dict::S($sDictKey), $aParams);
+            if ($bEnforce) {
+                $this->AddCheckIssue($sMsg);
+            } elseif ($bWarn) {
+                $this->AddCheckWarning($sMsg);
             }
-        } elseif ($sStimulus === 'ev_request_budget_approval') {
-            // Ensure a budget approver is provided when requesting budget approval
-            $iBudget = (int)($this->Get('budget_approver_id') ?: 0);
-            if ($iBudget <= 0) {
-                // Blocking issue: missing budget approver
-                $this->AddCheckIssues(\Dict::S('Class:OrderRequest/Error:BudgetApproverRequired'));
-            }
+            // policy_mode = off -> no-op
+        };
+
+        switch ($sStimulus) {
+            case 'ev_submit':
+                // Mindestens eine Positionszeile?
+                $iId = (int) $this->GetKey();
+                $oSearch = DBObjectSearch::FromOQL('SELECT OrderRequestLineItem WHERE order_request_id = :id');
+                $oSet = new DBObjectSet($oSearch, array(), array('id' => $iId));
+                if ($oSet->Count() < 1) {
+                    $this->AddCheckIssue(\Dict::S('Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'));
+                }
+                return;
+                break;
+
+            case 'ev_request_budget_approval':
+                // Budget-Genehmiger muss gesetzt sein
+                $iBudget = (int)($this->Get('budget_approver_id') ?: 0);
+                if ($iBudget <= 0) {
+                    $this->AddCheckIssue(\Dict::S('Class:OrderRequest/Error:BudgetApproverRequired'));
+                }
+                return;
+                break;
+
+            case 'ev_approve':
+                // Policy: Budget-Threshold erzwingt Budget-Flow
+                if ($iThreshold > 0 && $fEstimated >= $iThreshold) {
+                    $policyFail('Class:OrderRequest/Policy:BudgetThreshold', [number_format($iThreshold, 0), number_format($fEstimated, 2)]);
+                }
+                // Policy: Nur zugewiesener technischer Genehmiger
+                if ($bRestrict && $iTechApproverId > 0 && $iCurrentPid !== $iTechApproverId) {
+                    $policyFail('Class:OrderRequest/Policy:OnlyAssignedApprover');
+                }
+                // Policy: Self-Approval verbieten
+                if ($bNoSelf && $iCallerId > 0 && $iCurrentPid === $iCallerId) {
+                    $policyFail('Class:OrderRequest/Policy:SelfApprovalForbidden');
+                }
+                return;
+                break;
+
+            case 'ev_budget_approve':
+                // Policy: Nur zugewiesener Budget-Genehmiger
+                if ($bRestrict && $iBudgetApproverId > 0 && $iCurrentPid !== $iBudgetApproverId) {
+                    $policyFail('Class:OrderRequest/Policy:OnlyAssignedBudgetApprover');
+                }
+                // Policy: Self-Approval verbieten
+                if ($bNoSelf && $iCallerId > 0 && $iCurrentPid === $iCallerId) {
+                    $policyFail('Class:OrderRequest/Policy:SelfApprovalForbidden');
+                }
+                return;
+                break;
+
+            default:
+                // Other states: keep default transitions
+                break;
         }
     }
 

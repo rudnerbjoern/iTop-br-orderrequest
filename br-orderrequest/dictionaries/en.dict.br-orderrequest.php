@@ -15,7 +15,7 @@
  *
  * @copyright   Copyright (C) 2025 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-12
+ * @version     2025-11-13
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,8 +89,8 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Plural' => 'Order Requests',
     'Class:OrderRequest+' => 'Internal demand / BANF / procurement request handled as a specialized ticket.',
 
-    'Class:OrderRequest/Attribute:status' => 'Status',
-    'Class:OrderRequest/Attribute:status+' => 'Lifecycle status of the Order Request.',
+    'Class:OrderRequest/Attribute:status'                        => 'Status',
+    'Class:OrderRequest/Attribute:status+'                       => 'Lifecycle status of the Order Request.',
     'Class:OrderRequest/Attribute:status/Value:draft'            => 'Draft',
     'Class:OrderRequest/Attribute:status/Value:draft+'           => 'Information is being collected.',
     'Class:OrderRequest/Attribute:status/Value:submitted'        => 'Submitted',
@@ -166,20 +166,25 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:related_request_list' => 'Child requests',
     'Class:OrderRequest/Attribute:related_request_list+' => 'User requests referencing this order request.',
 
-    'Class:OrderRequest/Stimulus:ev_submit'           => 'Submit',
-    'Class:OrderRequest/Stimulus:ev_review'           => 'Start review',
-    'Class:OrderRequest/Stimulus:ev_request_approval' => 'Request approval',
-    'Class:OrderRequest/Stimulus:ev_approve'          => 'Approve',
-    'Class:OrderRequest/Stimulus:ev_reject'           => 'Reject',
-    'Class:OrderRequest/Stimulus:ev_procure'          => 'Send to procurement',
-    'Class:OrderRequest/Stimulus:ev_close'            => 'Close',
-    'Class:OrderRequest/Stimulus:ev_request_budget_approval' => 'Request budget approval',
-    'Class:OrderRequest/Stimulus:ev_budget_approve' => 'Approve budget',
-    'Class:OrderRequest/Stimulus:ev_budget_reject' => 'Reject budget',
+    'Class:OrderRequest/Stimulus:ev_submit'                     => 'Submit',
+    'Class:OrderRequest/Stimulus:ev_review'                     => 'Start review',
+    'Class:OrderRequest/Stimulus:ev_request_approval'           => 'Request approval',
+    'Class:OrderRequest/Stimulus:ev_approve'                    => 'Approve',
+    'Class:OrderRequest/Stimulus:ev_reject'                     => 'Reject',
+    'Class:OrderRequest/Stimulus:ev_procure'                    => 'Send to procurement',
+    'Class:OrderRequest/Stimulus:ev_close'                      => 'Close',
+    'Class:OrderRequest/Stimulus:ev_request_budget_approval'    => 'Request budget approval',
+    'Class:OrderRequest/Stimulus:ev_budget_approve'             => 'Approve budget',
+    'Class:OrderRequest/Stimulus:ev_budget_reject'              => 'Reject budget',
 
     // Validation messages (used in PHP)
-    'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit' => 'Please add at least one line item before submitting.',
-    'Class:OrderRequest/Error:BudgetApproverRequired' => 'Please select a budget approver before requesting budget approval.',
+    'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'   => 'Please add at least one line item before submitting.',
+    'Class:OrderRequest/Error:BudgetApproverRequired'           => 'Please select a budget approver before requesting budget approval.',
+    'Class:OrderRequest/Error:BudgetApproverRequired'           => 'Please set a budget approver before requesting budget approval.',
+    'Class:OrderRequest/Policy:OnlyAssignedApprover'            => 'Only the assigned technical approver may approve this request.',
+    'Class:OrderRequest/Policy:OnlyAssignedBudgetApprover'      => 'Only the assigned budget approver may approve this request.',
+    'Class:OrderRequest/Policy:SelfApprovalForbidden'           => 'Self-approval is not allowed for the requester.',
+    'Class:OrderRequest/Policy:BudgetThreshold'                 => 'Budget threshold (%1$s) reached (estimated %2$s): use budget approval.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────

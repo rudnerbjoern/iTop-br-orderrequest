@@ -1841,4 +1841,16 @@
             </definition>
         </menu>
     </menus>
+    <module_parameters>
+        <parameters id="br-orderrequest" _delta="define">
+            <!-- policy_mode: off, warn, enforce -->
+            <policy_mode type="string">warn</policy_mode>
+            <!-- approval_restrict_to_assigned_approver -->
+            <approval_restrict_to_assigned_approver type="bool">true</approval_restrict_to_assigned_approver>
+            <!-- approval_forbid_self_approval -->
+            <approval_forbid_self_approval type="bool">true</approval_forbid_self_approval>
+            <!-- budget_auto_threshold: 0 = off -->
+            <budget_auto_threshold type="int">0</budget_auto_threshold>
+        </parameters>
+    </module_parameters>
 </itop_design>
