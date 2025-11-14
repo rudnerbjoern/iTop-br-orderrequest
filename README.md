@@ -159,9 +159,57 @@ stateDiagram-v2
 > Once the request leaves `draft`, **line items** become **read-only** and **not deletable**.
 > Once the request is in `closed` or `rejected`, **line items** become **deletable**.
 
+## Configuration
+
+This extension exposes lightweight workflow policies via module settings. Defaults are installed from the XML, but any value in `config-itop.php` takes precedence.
+
+### Module settings
+
+| Key                                      | Type                              | Default | Description                                                                                                      |
+| ---------------------------------------- | --------------------------------- | ------: | ---------------------------------------------------------------------------------------------------------------- |
+| `policy_mode`                            | string (`off`, `warn`, `enforce`) |  `warn` | Controls whether policies are disabled, only warn, or block actions.                                             |
+| `approval_restrict_to_assigned_approver` | bool                              |  `true` | If enabled, only the **assigned approver** may trigger `Approve` actions.                                        |
+| `approval_forbid_self_approval`          | bool                              |  `true` | If enabled, the **requester/caller** cannot approve their own request.                                           |
+| `budget_auto_threshold`                  | int (≥ 0)                         |     `0` | If `> 0`, forces the **budget approval** flow when `estimated_total_cost ≥ threshold`. `0` disables auto-budget. |
+
+Example in `config-itop.php`:
+
+```php
+// config-itop.php
+// ...
+'module_settings' => array(
+  // ...
+  'br-orderrequest' => array(
+    'policy_mode' => 'warn', // off | warn | enforce
+    'approval_restrict_to_assigned_approver' => true,
+    'approval_forbid_self_approval' => true,
+    'budget_auto_threshold' => 0,
+  ),
+),
+```
+
+### Policy modes
+
+- `off` – Policies are ignored.
+- `warn` – Policies are evaluated and **warnings** are displayed, but users can proceed.
+- `enforce` – Policies are **blocking** (transitions are denied and/or checks fail).
+
+### What the policies do
+
+- **Restrict to assigned approver**
+  Applies to `ev_approve` and `ev_budget_approve`. Only the user referenced in `technical_approver_id` or `budget_approver_id` (respectively) may approve.
+- **Forbid self-approval**
+  The requester (`caller_id`) cannot approve (`ev_approve` / `ev_budget_approve`).
+- **Budget auto-threshold**
+  When `estimated_total_cost` meets/exceeds the threshold, the UI hides/directly denies the straight `Approve` path and steers to `Request budget approval` instead.
+
 ## iTop Compatibility
 
 The extension was tested on iTop 3.2.2
+
+## Testing
+
+See **[Manual Test Plan](docs/manual-test-plan.md)** for end-to-end test steps.
 
 ## Contributing
 
@@ -172,6 +220,7 @@ Please keep close to iTop conventions and include:
 - Valid [itop_design.xsd XML](https://rudnerbjoern.github.io/iTop-schema/) (iTop 3.2)
 - English dictionary updates (German appreciated)
 - A short test scenario (when relevant)
+- For end-to-end steps, see [Manual Test Plan](docs/manual-test-plan.md).
 
 ## License
 

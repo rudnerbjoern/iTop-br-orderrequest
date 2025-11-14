@@ -15,7 +15,7 @@
  *
  * @copyright   Copyright (C) 2025 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-12
+ * @version     2025-11-13
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -177,8 +177,13 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequest/Stimulus:ev_budget_approve' => 'Budget freigeben',
     'Class:OrderRequest/Stimulus:ev_budget_reject' => 'Budget ablehnen',
 
-    'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit' => 'Bitte fügen Sie vor dem Einreichen mindestens eine Position hinzu.',
-    'Class:OrderRequest/Error:BudgetApproverRequired' => 'Bitte einen Budget-Genehmiger auswählen, bevor die Budgetfreigabe angefordert wird.',
+    'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'   => 'Bitte fügen Sie vor dem Einreichen mindestens eine Position hinzu.',
+    'Class:OrderRequest/Error:BudgetApproverRequired'           => 'Bitte einen Budget-Genehmiger auswählen, bevor die Budgetfreigabe angefordert wird.',
+    'Class:OrderRequest/Error:BudgetApproverRequired'           => 'Bitte einen Budget-Genehmiger setzen, bevor die Budget-Freigabe angefordert wird.',
+    'Class:OrderRequest/Policy:OnlyAssignedApprover'            => 'Nur der zugewiesene technische Genehmiger darf diese Anforderung freigeben.',
+    'Class:OrderRequest/Policy:OnlyAssignedBudgetApprover'      => 'Nur der zugewiesene Budget-Genehmiger darf diese Anforderung freigeben.',
+    'Class:OrderRequest/Policy:SelfApprovalForbidden'           => 'Eigen-Genehmigung durch den Anforderer ist nicht erlaubt.',
+    'Class:OrderRequest/Policy:BudgetThreshold'                 => 'Budget-Schwelle (%1$s) erreicht (Schätzung %2$s): Budget-Freigabe verwenden.',
 ));
 
 // ─────────────────────────────────────────────────────────────────────────────
