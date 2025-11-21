@@ -1370,6 +1370,48 @@
                     <count_min>0</count_min>
                     <count_max>0</count_max>
                 </field>
+                <field id="receipts_list" xsi:type="AttributeLinkedSet" _delta="define">
+                    <linked_class>OrderReceiptEntry</linked_class>
+                    <ext_key_to_me>order_request_line_item_id</ext_key_to_me>
+                    <edit_mode>add_remove</edit_mode>
+                    <count_min>0</count_min>
+                    <count_max>0</count_max>
+                </field>
+                <field id="quantity_received_total" xsi:type="AttributeInteger" _delta="define">
+                    <sql>quantity_received_total</sql>
+                    <default_value>0</default_value>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="quantity_open" xsi:type="AttributeInteger" _delta="define">
+                    <sql>quantity_open</sql>
+                    <default_value>0</default_value>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
+                <field id="receipt_status" xsi:type="AttributeEnum" _delta="define">
+                    <sql>receipt_status</sql>
+                    <values>
+                        <value id="none">
+                            <code>none</code>
+                            <rank>10</rank>
+                        </value>
+                        <value id="partial">
+                            <code>partial</code>
+                            <rank>20</rank>
+                        </value>
+                        <value id="complete">
+                            <code>complete</code>
+                            <rank>30</rank>
+                        </value>
+                        <value id="over">
+                            <code>over</code>
+                            <rank>40</rank>
+                        </value>
+                    </values>
+                    <default_value>none</default_value>
+                    <display_style>list</display_style>
+                    <sort_type>rank</sort_type>
+                    <is_null_allowed>false</is_null_allowed>
+                </field>
             </fields>
             <event_listeners>
                 <event_listener id="OnLineItemSetInitialAttributesFlags">
@@ -1400,6 +1442,11 @@
                 <event_listener id="OnLineItemBeforeWrite">
                     <event>EVENT_DB_BEFORE_WRITE</event>
                     <callback>OnLineItemBeforeWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnLineItemLinksChanged">
+                    <event>EVENT_DB_LINKS_CHANGED</event>
+                    <callback>OnLineItemLinksChanged</callback>
                     <rank>10</rank>
                 </event_listener>
             </event_listeners>
@@ -1457,10 +1504,27 @@
                                         </item>
                                     </items>
                                 </item>
+                                <item id="fieldset:OrderRequestLineItem:receiving">
+                                    <rank>20</rank>
+                                    <items>
+                                        <item id="receipt_status">
+                                            <rank>10</rank>
+                                        </item>
+                                        <item id="quantity_received_total">
+                                            <rank>20</rank>
+                                        </item>
+                                        <item id="quantity_open">
+                                            <rank>30</rank>
+                                        </item>
+                                    </items>
+                                </item>
                             </items>
                         </item>
-                        <item id="functionalcis_list">
+                        <item id="receipts_list">
                             <rank>100</rank>
+                        </item>
+                        <item id="functionalcis_list">
+                            <rank>110</rank>
                         </item>
                     </items>
                 </details>
@@ -1483,6 +1547,15 @@
                         </item>
                         <item id="total_price_estimated">
                             <rank>70</rank>
+                        </item>
+                        <item id="receipt_status" _delta="define">
+                            <rank>80</rank>
+                        </item>
+                        <item id="quantity_received_total" _delta="define">
+                            <rank>90</rank>
+                        </item>
+                        <item id="quantity_open" _delta="define">
+                            <rank>100</rank>
                         </item>
                     </items>
                 </list>
@@ -1511,6 +1584,15 @@
                         </item>
                         <item id="total_price_estimated">
                             <rank>80</rank>
+                        </item>
+                        <item id="receipt_status" _delta="define">
+                            <rank>90</rank>
+                        </item>
+                        <item id="quantity_received_total" _delta="define">
+                            <rank>100</rank>
+                        </item>
+                        <item id="quantity_open" _delta="define">
+                            <rank>110</rank>
                         </item>
                     </items>
                 </search>
@@ -1611,6 +1693,134 @@
                         <item id="functionalci_name" />
                     </items>
                 </search>
+            </presentation>
+        </class>
+
+        <class id="OrderReceiptEntry" _delta="define">
+            <parent>cmdbAbstractObject</parent>
+            <php_parent>
+                <name>BR\Extension\OrderRequest\Model\_OrderReceiptEntry</name>
+                <file>src/Model/_OrderReceiptEntry.php</file>
+            </php_parent>
+            <properties>
+                <category>bizmodel,searchable,requestmgmt</category>
+                <abstract>false</abstract>
+                <key_type>autoincrement</key_type>
+                <db_table>orderreceiptentry</db_table>
+                <db_key_field>id</db_key_field>
+                <db_final_class_field />
+                <naming>
+                    <attributes>
+                        <attribute id="order_request_line_item_name" />
+                        <attribute id="receipt_date" />
+                    </attributes>
+                </naming>
+                <style>
+                    <icon>images/orderreceiptentry.svg</icon>
+                    <main_color>#7DD3FC</main_color>
+                </style>
+                <order>
+                    <columns>
+                        <column id="receipt_date" ascending="true" />
+                    </columns>
+                </order>
+                <uniqueness_rules>
+                    <rule id="unique_per_order_and_line">
+                        <attributes>
+                            <attribute id="order_request_line_item_id" />
+                            <attribute id="receipt_date" />
+                        </attributes>
+                    </rule>
+                </uniqueness_rules>
+            </properties>
+            <fields>
+                <field id="order_request_line_item_id" xsi:type="AttributeExternalKey">
+                    <sql>order_request_line_item_id</sql>
+                    <target_class>OrderRequestLineItem</target_class>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_AUTO</on_target_delete>
+                </field>
+                <field id="order_request_line_item_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>order_request_line_item_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="received_by_id" xsi:type="AttributeExternalKey">
+                    <sql>received_by_id</sql>
+                    <target_class>Person</target_class>
+                    <is_null_allowed>false</is_null_allowed>
+                    <on_target_delete>DEL_MANUAL</on_target_delete>
+                </field>
+                <field id="received_by_name" xsi:type="AttributeExternalField">
+                    <extkey_attcode>received_by_id</extkey_attcode>
+                    <target_attcode>name</target_attcode>
+                </field>
+                <field id="receipt_date" xsi:type="AttributeDateTime">
+                    <sql>receipt_date</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                    <default_value />
+                </field>
+                <field id="quantity" xsi:type="AttributeInteger">
+                    <sql>quantity</sql>
+                    <is_null_allowed>false</is_null_allowed>
+                    <default_value>1</default_value>
+                </field>
+
+                <field id="delivery_note" xsi:type="AttributeString">
+                    <sql>delivery_note</sql>
+                    <is_null_allowed>true</is_null_allowed>
+                    <default_value />
+                </field>
+            </fields>
+            <event_listeners>
+                <event_listener id="OnReceiptSetAttributesFlags">
+                    <event>EVENT_DB_SET_ATTRIBUTES_FLAGS</event>
+                    <callback>OnReceiptSetAttributesFlags</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnReceiptCheckToWrite">
+                    <event>EVENT_DB_CHECK_TO_WRITE</event>
+                    <callback>OnReceiptCheckToWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnReceiptAfterWrite">
+                    <event>EVENT_DB_AFTER_WRITE</event>
+                    <callback>OnReceiptAfterWrite</callback>
+                    <rank>10</rank>
+                </event_listener>
+                <event_listener id="OnReceiptAboutToDelete">
+                    <event>EVENT_DB_ABOUT_TO_DELETE</event>
+                    <callback>OnReceiptAboutToDelete</callback>
+                    <rank>10</rank>
+                </event_listener>
+            </event_listeners>
+            <methods />
+            <presentation>
+                <details>
+                    <items>
+                        <item id="order_request_line_item_id" />
+                        <item id="receipt_date" />
+                        <item id="received_by_id" />
+                        <item id="quantity" />
+                        <item id="delivery_note" />
+                    </items>
+                </details>
+                <list>
+                    <items>
+                        <item id="order_request_line_item_id" />
+                        <item id="receipt_date" />
+                        <item id="received_by_id" />
+                        <item id="quantity" />
+                    </items>
+                </list>
+                <search>
+                    <items>
+                        <item id="order_request_line_item_id" />
+                        <item id="receipt_date" />
+                        <item id="received_by_id" />
+                        <item id="quantity" />
+                    </items>
+                </search>
+
             </presentation>
         </class>
 

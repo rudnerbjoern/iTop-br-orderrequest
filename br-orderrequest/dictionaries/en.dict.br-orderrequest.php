@@ -202,6 +202,7 @@ Dict::Add('EN US', 'English', 'English', array(
     'OrderRequestLineItem:base'        => 'Basics',
     'OrderRequestLineItem:qtyprice'    => 'Quantity & pricing',
     'OrderRequestLineItem:description' => 'Description',
+    'OrderRequestLineItem/Fieldset:receiving' => 'Receiving',
 
     'Class:OrderRequestLineItem'  => 'Order Request Line Item',
     'Class:OrderRequestLineItem+' => 'Single line of an internal order request (BANF) used by IT procurement.',
@@ -241,6 +242,23 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestLineItem/Attribute:total_price_estimated'  => 'Estimated total',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated+' => 'Auto-computed as quantity × estimated unit price.',
 
+    'Class:OrderRequestLineItem/Attribute:quantity_received_total' => 'Qty received (total)',
+    'Class:OrderRequestLineItem/Attribute:quantity_received_total+' => 'Sum of all received quantities for this line.',
+    'Class:OrderRequestLineItem/Attribute:quantity_open' => 'Qty open',
+    'Class:OrderRequestLineItem/Attribute:quantity_open+' => 'Remaining quantity to be received.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status' => 'Receiving status',
+    'Class:OrderRequestLineItem/Attribute:receipt_status+' => 'Roll-up receiving status for this line.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:none' => 'None',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:none+' => 'No receipt recorded yet.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:partial' => 'Partial',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:partial+' => 'Partially received.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:complete' => 'Complete',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:complete+' => 'Fully received.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:over' => 'Over-received',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:over+' => 'Received quantity exceeds ordered quantity.',
+
+    'Class:OrderRequestLineItem/Attribute:receipts_list' => 'Receipts',
+    'Class:OrderRequestLineItem/Attribute:receipts_list+' => 'Goods receipt entries linked to this line.',
     'Class:OrderRequestLineItem/Attribute:functionalcis_list' => 'Linked CIs',
 
     // Validation messages (used in PHP)
@@ -264,4 +282,39 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_id' => 'Functional CI',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_name' => 'Functional CI name',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:comment' => 'Comment',
+));
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Class: OrderReceiptEntry
+// ─────────────────────────────────────────────────────────────────────────────
+/** @disregard P1009 Undefined type Dict */
+Dict::Add('EN US', 'English', 'English', array(
+    'Class:OrderReceiptEntry' => 'Receipt entry',
+    'Class:OrderReceiptEntry+' => 'Record of a goods receipt for a single order line.',
+
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_id' => 'Order line',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_id+' => 'Order Request line to which this receipt belongs.',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_name' => 'Line name',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_name+' => '',
+    'Class:OrderReceiptEntry/Attribute:received_by_id' => 'Received by',
+    'Class:OrderReceiptEntry/Attribute:received_by_id+' => 'Person who performed the goods receipt.',
+    'Class:OrderReceiptEntry/Attribute:received_by_name' => 'Received by',
+    'Class:OrderReceiptEntry/Attribute:received_by_name+' => '',
+    'Class:OrderReceiptEntry/Attribute:receipt_date' => 'Receipt date',
+    'Class:OrderReceiptEntry/Attribute:receipt_date+' => 'Date and time of the goods receipt.',
+    'Class:OrderReceiptEntry/Attribute:quantity' => 'Quantity',
+    'Class:OrderReceiptEntry/Attribute:quantity+' => 'Received quantity for this receipt.',
+    'Class:OrderReceiptEntry/Attribute:delivery_note' => 'Delivery note',
+    'Class:OrderReceiptEntry/Attribute:delivery_note+' => 'Reference to the supplier delivery note.',
+
+    // ---- OrderReceiptEntry: validation messages ----
+    'Class:OrderReceiptEntry/Warning:OverReceipt' => 'The received quantity (%1$s) exceeds the ordered quantity (%2$s).',
+    'Class:OrderReceiptEntry/Error:OverReceive' => 'Received quantity exceeds the ordered quantity.',
+    'Class:OrderReceiptEntry/Error:QuantityMustBePositive' => 'Quantity must be greater than zero.',
+    'Class:OrderReceiptEntry/Error:ReceiptDateRequired' => 'Receipt date is required.',
+    'Class:OrderReceiptEntry/Error:ParentNotReceiving' => 'Receipts can only be recorded while the order is in "Receiving".',
+    'Class:OrderReceiptEntry/Error:LineItemMissing' => 'Order line item is missing or invalid.',
+    'Class:OrderReceiptEntry/Error:ParentNotReceiving' => 'Goods receipt is only allowed while the Order Request is in "receiving" status.',
+
 ));

@@ -202,6 +202,7 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'OrderRequestLineItem:base'        => 'Grunddaten',
     'OrderRequestLineItem:qtyprice'    => 'Menge & Preis',
     'OrderRequestLineItem:description' => 'Beschreibung',
+    'OrderRequestLineItem/Fieldset:receiving' => 'Wareneingang',
 
     'Class:OrderRequestLineItem' => 'BANF-Position',
     'Class:OrderRequestLineItem/Plural' => 'BANF-Positionen',
@@ -237,12 +238,29 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:OrderRequestLineItem/Attribute:uom/Value:MON' => 'Monat',
     'Class:OrderRequestLineItem/Attribute:uom/Value:ANN' => 'Jahr',
 
-    'Class:OrderRequestLineItem/Attribute:functionalcis_list' => 'Verknüpfte CIs',
-
     'Class:OrderRequestLineItem/Attribute:unit_price_estimated'  => 'Geschätzter Einzelpreis',
     'Class:OrderRequestLineItem/Attribute:unit_price_estimated+' => 'Geschätzter Preis pro Einheit.',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated'  => 'Geschätzter Gesamtpreis',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated+' => 'Automatisch berechnet: Menge × geschätzter Einzelpreis.',
+
+    'Class:OrderRequestLineItem/Attribute:quantity_received_total' => 'Erhaltene Menge (gesamt)',
+    'Class:OrderRequestLineItem/Attribute:quantity_received_total+' => 'Summe aller Wareneingänge für diese Position.',
+    'Class:OrderRequestLineItem/Attribute:quantity_open' => 'Offene Menge',
+    'Class:OrderRequestLineItem/Attribute:quantity_open+' => 'Noch zu liefernde/zu erfassende Menge.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status' => 'Wareneingangsstatus',
+    'Class:OrderRequestLineItem/Attribute:receipt_status+' => 'Rollup-Status des Wareneingangs für diese Position.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:none' => 'Kein Eingang',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:none+' => 'Es wurde noch kein Wareneingang erfasst.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:partial' => 'Teilweise',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:partial+' => 'Teilweise erhalten.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:complete' => 'Vollständig',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:complete+' => 'Vollständig erhalten.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:over' => 'Überlieferung',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:over+' => 'Erfasste Menge übersteigt die Bestellmenge.',
+
+    'Class:OrderRequestLineItem/Attribute:receipts_list' => 'Wareneingänge',
+    'Class:OrderRequestLineItem/Attribute:receipts_list+' => 'Wareneingänge zu dieser Position.',
+    'Class:OrderRequestLineItem/Attribute:functionalcis_list' => 'Verknüpfte CIs',
 
     // Validierungen (in PHP verwendet)
     'Class:OrderRequestLineItem/Error:ParentNotEditable'      => 'Diese Position kann nicht geändert werden, da die zugehörige Bestellanforderung nicht mehr im Status „Entwurf“ ist.',
@@ -265,4 +283,33 @@ Dict::Add('DE DE', 'German', 'Deutsch', array(
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_id' => 'Functional CI',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_name' => 'Functional CI Name',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:comment' => 'Kommentar',
+));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Class: OrderReceiptEntry
+// ─────────────────────────────────────────────────────────────────────────────
+/** @disregard P1009 Undefined type Dict */
+Dict::Add('DE DE', 'German', 'Deutsch', array(
+    'Class:OrderReceiptEntry' => 'Wareneingang',
+    'Class:OrderReceiptEntry+' => 'Erfassung eines Wareneingangs zu einer Bestellposition.',
+
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_id' => 'Bestellposition',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_id+' => 'Order-Request-Position, zu der dieser Wareneingang gehört.',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_name' => 'Positionsname',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_name+' => '',
+    'Class:OrderReceiptEntry/Attribute:received_by_id' => 'Erfasst von',
+    'Class:OrderReceiptEntry/Attribute:received_by_id+' => 'Person, die den Wareneingang erfasst hat.',
+    'Class:OrderReceiptEntry/Attribute:received_by_name' => 'Erfasst von',
+    'Class:OrderReceiptEntry/Attribute:received_by_name+' => '',
+    'Class:OrderReceiptEntry/Attribute:receipt_date' => 'Wareneingangsdatum',
+    'Class:OrderReceiptEntry/Attribute:receipt_date+' => 'Datum und Uhrzeit des Wareneingangs.',
+    'Class:OrderReceiptEntry/Attribute:quantity' => 'Menge',
+    'Class:OrderReceiptEntry/Attribute:quantity+' => 'Erfasste Menge für diesen Wareneingang.',
+    'Class:OrderReceiptEntry/Attribute:delivery_note' => 'Lieferschein',
+    'Class:OrderReceiptEntry/Attribute:delivery_note+' => 'Referenz zum Lieferschein des Lieferanten.',
+
+    'Class:OrderReceiptEntry/Error:QuantityMustBePositive' => 'Die erfasste Menge muss größer als Null sein.',
+    'Class:OrderReceiptEntry/Error:ReceiptDateRequired' => 'Das Wareneingangsdatum ist erforderlich.',
+    'Class:OrderReceiptEntry/Warning:OverReceipt' => 'Die erfasste Menge (%1$s) übersteigt die bestellte Menge (%2$s).',
+    'Class:OrderReceiptEntry/Error:ParentNotReceiving' => 'Wareneingänge dürfen nur im Status „Receiving“ erfasst werden.',
 ));
