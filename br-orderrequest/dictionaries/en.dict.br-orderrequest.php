@@ -106,6 +106,10 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:status/Value:rejected+'        => 'Rejected by the approver.',
     'Class:OrderRequest/Attribute:status/Value:procurement'      => 'Procurement',
     'Class:OrderRequest/Attribute:status/Value:procurement+'     => 'Handed over to purchasing.',
+    'Class:OrderRequest/Attribute:status/Value:receiving'        => 'Receiving',
+    'Class:OrderRequest/Attribute:status/Value:receiving+'       => 'Goods receipt in progress.',
+    'Class:OrderRequest/Attribute:status/Value:received'         => 'Received',
+    'Class:OrderRequest/Attribute:status/Value:received+'        => 'All items have been received.',
     'Class:OrderRequest/Attribute:status/Value:closed'           => 'Closed',
     'Class:OrderRequest/Attribute:status/Value:closed+'          => 'Completed and closed.',
 
@@ -170,12 +174,15 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Stimulus:ev_review'                     => 'Start review',
     'Class:OrderRequest/Stimulus:ev_request_approval'           => 'Request approval',
     'Class:OrderRequest/Stimulus:ev_approve'                    => 'Approve',
-    'Class:OrderRequest/Stimulus:ev_reject'                     => 'Reject',
-    'Class:OrderRequest/Stimulus:ev_procure'                    => 'Send to procurement',
-    'Class:OrderRequest/Stimulus:ev_close'                      => 'Close',
     'Class:OrderRequest/Stimulus:ev_request_budget_approval'    => 'Request budget approval',
     'Class:OrderRequest/Stimulus:ev_budget_approve'             => 'Approve budget',
     'Class:OrderRequest/Stimulus:ev_budget_reject'              => 'Reject budget',
+    'Class:OrderRequest/Stimulus:ev_procure'                    => 'Send to procurement',
+    'Class:OrderRequest/Stimulus:ev_start_receiving'            => 'Start receiving',
+    'Class:OrderRequest/Stimulus:ev_mark_received'              => 'Mark received',
+    'Class:OrderRequest/Stimulus:ev_reopen_receiving'           => 'Reopen receiving',
+    'Class:OrderRequest/Stimulus:ev_reject'                     => 'Reject',
+    'Class:OrderRequest/Stimulus:ev_close'                      => 'Close',
 
     // Validation messages (used in PHP)
     'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'   => 'Please add at least one line item before submitting.',
@@ -196,7 +203,7 @@ Dict::Add('EN US', 'English', 'English', array(
     'OrderRequestLineItem:qtyprice'    => 'Quantity & pricing',
     'OrderRequestLineItem:description' => 'Description',
 
-    'Class:OrderRequestLineItem' => 'Order Request Line Item',
+    'Class:OrderRequestLineItem'  => 'Order Request Line Item',
     'Class:OrderRequestLineItem+' => 'Single line of an internal order request (BANF) used by IT procurement.',
 
     'Class:OrderRequestLineItem/Attribute:name'          => 'Name',
@@ -257,6 +264,4 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_id' => 'Functional CI',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_name' => 'Functional CI name',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:comment' => 'Comment',
-
-
 ));

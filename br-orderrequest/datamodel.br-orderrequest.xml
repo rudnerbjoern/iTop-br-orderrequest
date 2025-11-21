@@ -114,9 +114,27 @@
                                 <decoration_classes>fas fa-shopping-cart</decoration_classes>
                             </style>
                         </value>
+                        <value id="receiving">
+                            <code>receiving</code>
+                            <rank>80</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-active-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-active-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-box-open</decoration_classes>
+                            </style>
+                        </value>
+                        <value id="received">
+                            <code>received</code>
+                            <rank>90</rank>
+                            <style>
+                                <main_color>$ibo-lifecycle-success-state-primary-color</main_color>
+                                <complementary_color>$ibo-lifecycle-success-state-secondary-color</complementary_color>
+                                <decoration_classes>fas fa-box-check</decoration_classes>
+                            </style>
+                        </value>
                         <value id="rejected">
                             <code>rejected</code>
-                            <rank>80</rank>
+                            <rank>100</rank>
                             <style>
                                 <main_color>$ibo-lifecycle-failure-state-primary-color</main_color>
                                 <complementary_color>$ibo-lifecycle-failure-state-secondary-color</complementary_color>
@@ -125,7 +143,7 @@
                         </value>
                         <value id="closed">
                             <code>closed</code>
-                            <rank>90</rank>
+                            <rank>110</rank>
                             <style>
                                 <main_color>$ibo-lifecycle-frozen-state-primary-color</main_color>
                                 <complementary_color>$ibo-lifecycle-frozen-state-secondary-color</complementary_color>
@@ -320,6 +338,9 @@
                     <stimulus id="ev_budget_approve" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_budget_reject" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_procure" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_start_receiving" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_mark_received" xsi:type="StimulusUserAction" />
+                    <stimulus id="ev_reopen_receiving" xsi:type="StimulusUserAction" />
                     <stimulus id="ev_close" xsi:type="StimulusUserAction" />
                 </stimuli>
                 <states>
@@ -349,7 +370,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="estimated_total_cost">
                                 <read_only />
                             </attribute>
@@ -419,7 +439,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="parent_request_id">
                                 <read_only />
                             </attribute>
@@ -435,7 +454,6 @@
                             <attribute id="related_request_list">
                                 <read_only />
                             </attribute>
-
                             <attribute id="title">
                                 <read_only />
                                 <mandatory />
@@ -544,7 +562,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="approved_by_id">
                                 <hidden />
                             </attribute>
@@ -665,7 +682,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="approved_by_id">
                                 <read_only />
                             </attribute>
@@ -762,7 +778,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="approved_by_id">
                                 <read_only />
                             </attribute>
@@ -821,6 +836,16 @@
                             </attribute>
                         </flags>
                         <transitions>
+                            <transition id="ev_start_receiving">
+                                <target>receiving</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                            <transition id="ev_mark_received">
+                                <target>received</target>
+                                <flags />
+                                <actions />
+                            </transition>
                             <transition id="ev_close">
                                 <target>closed</target>
                                 <flags />
@@ -838,6 +863,38 @@
                                         </params>
                                     </action>
                                 </actions>
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="receiving">
+                        <inherit_flags_from>procurement</inherit_flags_from>
+                        <flags />
+                        <transitions>
+                            <transition id="ev_mark_received">
+                                <target>received</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                            <transition id="ev_procure">
+                                <target>procurement</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                        </transitions>
+                    </state>
+                    <state id="received">
+                        <inherit_flags_from>receiving</inherit_flags_from>
+                        <flags />
+                        <transitions>
+                            <transition id="ev_reopen_receiving">
+                                <target>receiving</target>
+                                <flags />
+                                <actions />
+                            </transition>
+                            <transition id="ev_close">
+                                <target>closed</target>
+                                <flags />
+                                <actions />
                             </transition>
                         </transitions>
                     </state>
@@ -867,7 +924,6 @@
                             <attribute id="last_update">
                                 <read_only />
                             </attribute>
-
                             <attribute id="approval_comment">
                                 <read_only />
                             </attribute>
@@ -1069,13 +1125,13 @@
                             <rank>100</rank>
                         </item>
                         <item id="functionalcis_list">
-                            <rank>110</rank>
-                        </item>
-                        <item id="contacts_list">
                             <rank>120</rank>
                         </item>
-                        <item id="related_request_list">
+                        <item id="contacts_list">
                             <rank>130</rank>
+                        </item>
+                        <item id="related_request_list">
+                            <rank>140</rank>
                         </item>
                         <item id="private_log">
                             <rank>200</rank>
@@ -1557,7 +1613,6 @@
                 </search>
             </presentation>
         </class>
-
 
         <!-- ***************** Typology ***************** -->
         <class id="OrderRequestType" _delta="define">
