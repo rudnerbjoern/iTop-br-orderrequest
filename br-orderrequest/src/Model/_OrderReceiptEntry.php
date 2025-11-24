@@ -141,35 +141,66 @@ class _OrderReceiptEntry extends cmdbAbstractObject
         }
     }
 
-
-    public function OnReceiptAboutToDelete(EventData $oEventData): void
+    /**
+     * EVENT_DB_ABOUT_TO_DELETE
+     *
+     * Block deletion if the parent OrderRequest is not in 'receiving'
+     * and recompute the rollups (quantity_received_total / quantity_open / receipt_status)
+     * on the parent line item as if this entry was already gone.
+     */
+    public function OnReceiptBeforeDelete(EventData $oEventData): void
     {
+        // Parent context (OrderRequestLineItem + OrderRequest + status)
         $ctx = $this->GetParentOrderAndStatus();
-        if (!$ctx['line']) {
+        $oLine   = $ctx['line'];
+        $oOrder  = $ctx['order'];
+        $sStatus = $ctx['status'];
+
+        // 1) Strict: only allow delete while parent OrderRequest is in 'receiving'
+        if (!$oOrder || $sStatus !== 'receiving') {
+            $this->AddDeleteIssue(\Dict::S('Class:OrderReceiptEntry/Error:ParentNotReceiving'));
             return;
         }
 
-        // Neu berechnen OHNE mich
-        $iLineId = (int)$ctx['line']->GetKey();
-        $iOrdered = (int)($ctx['line']->Get('quantity') ?? 0);
-
-        $oSearch = \DBObjectSearch::FromOQL('SELECT OrderReceiptEntry WHERE order_request_line_item_id = :li AND id != :me');
-        $oSet    = new \DBObjectSet($oSearch, [], [
-            'li' => $iLineId,
-            'me' => (int)$this->GetKey(),
-        ]);
-
-        $sum = 0;
-        while ($oR = $oSet->Fetch()) {
-            $sum += (int)($oR->Get('quantity') ?? 0);
+        // 2) Recompute rollups on the parent line item *without* this entry
+        if (!$oLine) {
+            return;
         }
 
-        $open   = max(0, $iOrdered - $sum);
-        $status = ($sum === 0) ? 'none' : (($sum < $iOrdered) ? 'partial' : (($sum == $iOrdered) ? 'complete' : 'over'));
+        $iLiId    = (int) ($this->Get('order_request_line_item_id') ?: 0);
+        $iOrdered = (int) ($oLine->Get('quantity') ?: 0);
 
-        $ctx['line']->Set('quantity_received_total', $sum);
-        $ctx['line']->Set('quantity_open', $open);
-        $ctx['line']->Set('receipt_status', $status);
-        $ctx['line']->DBUpdate();
+        if ($iLiId <= 0 || $iOrdered < 0) {
+            return;
+        }
+
+        // Sum all other receipts for this line item (exclude current id)
+        $oSearch = DBObjectSearch::FromOQL('SELECT OrderReceiptEntry WHERE order_request_line_item_id = :li AND id != :me');
+        $oSet = new DBObjectSet($oSearch, [], [
+            'li' => $iLiId,
+            'me' => (int) $this->GetKey(),
+        ]);
+
+        $iSum = 0;
+        while ($oR = $oSet->Fetch()) {
+            $iSum += (int) ($oR->Get('quantity') ?: 0);
+        }
+
+        $iOpen   = max(0, $iOrdered - $iSum);
+        $sNewRec = 'none';
+        if ($iSum === 0) {
+            $sNewRec = 'none';
+        } elseif ($iSum < $iOrdered) {
+            $sNewRec = 'partial';
+        } elseif ($iSum === $iOrdered) {
+            $sNewRec = 'complete';
+        } else {
+            $sNewRec = 'over';
+        }
+
+        $oLine->Set('quantity_received_total', $iSum);
+        $oLine->Set('quantity_open', $iOpen);
+        $oLine->Set('receipt_status', $sNewRec);
+        $oLine->DBUpdate();
     }
 }
