@@ -12,9 +12,9 @@
  *
  * The generated class OrderRequestLineItem will extend this class (via <php_parent>).
  *
- * @copyright   Copyright (C) 2025 Björn Rudner
+ * @copyright   Copyright (C) 2025-2026 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-11
+ * @version     2026-01-16
  */
 
 namespace BR\Extension\OrderRequest\Model;

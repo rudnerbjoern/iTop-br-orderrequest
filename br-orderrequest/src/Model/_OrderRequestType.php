@@ -10,18 +10,40 @@
  * - "Mandatory" via flags only affects the UI; always keep the server-side check.
  * - Truthy for requires_budget_owner_approval is normalized across common representations ('1','yes','true').
  *
- * @copyright   Copyright (C) 2025 Björn Rudner
+ * @copyright   Copyright (C) 2025-2026 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-11
+ * @version     2026-01-16
  */
 
 namespace BR\Extension\OrderRequest\Model;
 
 use Combodo\iTop\Service\Events\EventData;
 use cmdbAbstractObject;
+use UserRights;
 
 class _OrderRequestType extends cmdbAbstractObject
 {
+
+    /**
+     * PrefillCreationForm
+     *
+     * Called by iTop before rendering the creation form (UI).
+     *
+     * @param array $aContextParam UI context (might contain caller, org, etc.)
+     * @return void
+     */
+    public function PrefillCreationForm(&$aContextParam): void
+    {
+        // Keep the standard iTop behavior first (important for compatibility)
+        parent::PrefillCreationForm($aContextParam);
+
+        // Get the currently authenticated iTop user object (may be null in some contexts)
+        $oUser = UserRights::GetUserObject();
+        if ($oUser !== null) {
+            // Assign the user's organization to the new record
+            $this->Set('org_id', (int) $oUser->Get('org_id'));
+        }
+    }
 
     /**
      * EVENT_DB_SET_ATTRIBUTES_FLAGS

@@ -10,9 +10,9 @@
  * - roll-up of estimated_total_cost from linked line items
  * - UI guard rails (deny submit if no line items)
  *
- * @copyright   Copyright (C) 2025 Björn Rudner
+ * @copyright   Copyright (C) 2025-2026 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-13
+ * @version     2026-01-16
  */
 
 namespace BR\Extension\OrderRequest\Model;
@@ -24,6 +24,7 @@ use DBObjectSearch;
 use DBObjectSet;
 use AttributeDate;
 use AttributeDateTime;
+use UserRights;
 
 /**
  * Parent class for the generated OrderRequest class (declared via <php_parent>).
@@ -105,10 +106,21 @@ class _OrderRequest extends Ticket
      */
     public function PrefillCreationForm(&$aContextParam): void
     {
+        // Keep the standard iTop behavior first (important for compatibility)
+        parent::PrefillCreationForm($aContextParam);
+
+        // Get the currently authenticated iTop user object (may be null in some contexts)
+        $oUser = UserRights::GetUserObject();
+        if ($oUser !== null) {
+            // Assign the user's organization to the new record
+            $this->Set('org_id', (int) $oUser->Get('org_id'));
+        }
+
         // Use iTop's internal datetime format to avoid timezone/format issues
         if (empty($this->Get('start_date'))) {
             $this->Set('start_date', date(AttributeDateTime::GetInternalFormat()));
         }
+
         if (empty($this->Get('last_update'))) {
             $this->Set('last_update', date(AttributeDateTime::GetInternalFormat()));
         }
