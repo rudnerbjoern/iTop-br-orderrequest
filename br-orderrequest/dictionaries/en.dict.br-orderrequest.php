@@ -106,6 +106,10 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Attribute:status/Value:rejected+'        => 'Rejected by the approver.',
     'Class:OrderRequest/Attribute:status/Value:procurement'      => 'Procurement',
     'Class:OrderRequest/Attribute:status/Value:procurement+'     => 'Handed over to purchasing.',
+    'Class:OrderRequest/Attribute:status/Value:receiving'        => 'Receiving',
+    'Class:OrderRequest/Attribute:status/Value:receiving+'       => 'Goods receipt in progress.',
+    'Class:OrderRequest/Attribute:status/Value:received'         => 'Received',
+    'Class:OrderRequest/Attribute:status/Value:received+'        => 'All items have been received.',
     'Class:OrderRequest/Attribute:status/Value:closed'           => 'Closed',
     'Class:OrderRequest/Attribute:status/Value:closed+'          => 'Completed and closed.',
 
@@ -170,12 +174,15 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequest/Stimulus:ev_review'                     => 'Start review',
     'Class:OrderRequest/Stimulus:ev_request_approval'           => 'Request approval',
     'Class:OrderRequest/Stimulus:ev_approve'                    => 'Approve',
-    'Class:OrderRequest/Stimulus:ev_reject'                     => 'Reject',
-    'Class:OrderRequest/Stimulus:ev_procure'                    => 'Send to procurement',
-    'Class:OrderRequest/Stimulus:ev_close'                      => 'Close',
     'Class:OrderRequest/Stimulus:ev_request_budget_approval'    => 'Request budget approval',
     'Class:OrderRequest/Stimulus:ev_budget_approve'             => 'Approve budget',
     'Class:OrderRequest/Stimulus:ev_budget_reject'              => 'Reject budget',
+    'Class:OrderRequest/Stimulus:ev_procure'                    => 'Send to procurement',
+    'Class:OrderRequest/Stimulus:ev_start_receiving'            => 'Start receiving',
+    'Class:OrderRequest/Stimulus:ev_mark_received'              => 'Mark received',
+    'Class:OrderRequest/Stimulus:ev_reopen_receiving'           => 'Reopen receiving',
+    'Class:OrderRequest/Stimulus:ev_reject'                     => 'Reject',
+    'Class:OrderRequest/Stimulus:ev_close'                      => 'Close',
 
     // Validation messages (used in PHP)
     'Class:OrderRequest/Error:AtLeastOneLineItemBeforeSubmit'   => 'Please add at least one line item before submitting.',
@@ -195,8 +202,9 @@ Dict::Add('EN US', 'English', 'English', array(
     'OrderRequestLineItem:base'        => 'Basics',
     'OrderRequestLineItem:qtyprice'    => 'Quantity & pricing',
     'OrderRequestLineItem:description' => 'Description',
+    'OrderRequestLineItem/Fieldset:receiving' => 'Receiving',
 
-    'Class:OrderRequestLineItem' => 'Order Request Line Item',
+    'Class:OrderRequestLineItem'  => 'Order Request Line Item',
     'Class:OrderRequestLineItem+' => 'Single line of an internal order request (BANF) used by IT procurement.',
 
     'Class:OrderRequestLineItem/Attribute:name'          => 'Name',
@@ -234,6 +242,23 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:OrderRequestLineItem/Attribute:total_price_estimated'  => 'Estimated total',
     'Class:OrderRequestLineItem/Attribute:total_price_estimated+' => 'Auto-computed as quantity × estimated unit price.',
 
+    'Class:OrderRequestLineItem/Attribute:quantity_received_total' => 'Qty received (total)',
+    'Class:OrderRequestLineItem/Attribute:quantity_received_total+' => 'Sum of all received quantities for this line.',
+    'Class:OrderRequestLineItem/Attribute:quantity_open' => 'Qty open',
+    'Class:OrderRequestLineItem/Attribute:quantity_open+' => 'Remaining quantity to be received.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status' => 'Receiving status',
+    'Class:OrderRequestLineItem/Attribute:receipt_status+' => 'Roll-up receiving status for this line.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:none' => 'None',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:none+' => 'No receipt recorded yet.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:partial' => 'Partial',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:partial+' => 'Partially received.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:complete' => 'Complete',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:complete+' => 'Fully received.',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:over' => 'Over-received',
+    'Class:OrderRequestLineItem/Attribute:receipt_status/Value:over+' => 'Received quantity exceeds ordered quantity.',
+
+    'Class:OrderRequestLineItem/Attribute:receipts_list' => 'Receipts',
+    'Class:OrderRequestLineItem/Attribute:receipts_list+' => 'Goods receipt entries linked to this line.',
     'Class:OrderRequestLineItem/Attribute:functionalcis_list' => 'Linked CIs',
 
     // Validation messages (used in PHP)
@@ -257,6 +282,39 @@ Dict::Add('EN US', 'English', 'English', array(
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_id' => 'Functional CI',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:functionalci_name' => 'Functional CI name',
     'Class:lnkOrderRequestLineItemToFunctionalCI/Attribute:comment' => 'Comment',
+));
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Class: OrderReceiptEntry
+// ─────────────────────────────────────────────────────────────────────────────
+/** @disregard P1009 Undefined type Dict */
+Dict::Add('EN US', 'English', 'English', array(
+    'Class:OrderReceiptEntry' => 'Receipt entry',
+    'Class:OrderReceiptEntry+' => 'Record of a goods receipt for a single order line.',
+
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_id' => 'Order line',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_id+' => 'Order Request line to which this receipt belongs.',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_name' => 'Line name',
+    'Class:OrderReceiptEntry/Attribute:order_request_line_item_name+' => '',
+    'Class:OrderReceiptEntry/Attribute:received_by_id' => 'Received by',
+    'Class:OrderReceiptEntry/Attribute:received_by_id+' => 'Person who performed the goods receipt.',
+    'Class:OrderReceiptEntry/Attribute:received_by_name' => 'Received by',
+    'Class:OrderReceiptEntry/Attribute:received_by_name+' => '',
+    'Class:OrderReceiptEntry/Attribute:receipt_date' => 'Receipt date',
+    'Class:OrderReceiptEntry/Attribute:receipt_date+' => 'Date and time of the goods receipt.',
+    'Class:OrderReceiptEntry/Attribute:quantity' => 'Quantity',
+    'Class:OrderReceiptEntry/Attribute:quantity+' => 'Received quantity for this receipt.',
+    'Class:OrderReceiptEntry/Attribute:delivery_note' => 'Delivery note',
+    'Class:OrderReceiptEntry/Attribute:delivery_note+' => 'Reference to the supplier delivery note.',
+
+    // ---- OrderReceiptEntry: validation messages ----
+    'Class:OrderReceiptEntry/Warning:OverReceipt' => 'The received quantity (%1$s) exceeds the ordered quantity (%2$s).',
+    'Class:OrderReceiptEntry/Error:OverReceive' => 'Received quantity exceeds the ordered quantity.',
+    'Class:OrderReceiptEntry/Error:QuantityMustBePositive' => 'Quantity must be greater than zero.',
+    'Class:OrderReceiptEntry/Error:ReceiptDateRequired' => 'Receipt date is required.',
+    'Class:OrderReceiptEntry/Error:ParentNotReceiving' => 'Receipts can only be recorded while the order is in "Receiving".',
+    'Class:OrderReceiptEntry/Error:LineItemMissing' => 'Order line item is missing or invalid.',
+    'Class:OrderReceiptEntry/Error:ParentNotReceiving' => 'Goods receipt is only allowed while the Order Request is in "receiving" status.',
 
 ));

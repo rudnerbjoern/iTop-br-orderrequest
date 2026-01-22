@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+    style="color:#0D9488">
+    <title>Order Receipt Entry</title>
+
+    <!-- Box (isometric) -->
+    <path d="M3 7l9-5 9 5v10l-9 5-9-5V7z" />
+    <path d="M3 7l9 5 9-5" />
+    <path d="M12 2v20" />
+
+    <!-- Check badge (bottom-right) -->
+    <circle cx="17.5" cy="16.5" r="4.25" fill="white" stroke="currentColor" />
+    <path d="M15.8 16.5l1.4 1.4 2.6-2.6" />
+
+</svg>

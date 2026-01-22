@@ -12,9 +12,9 @@
  *
  * The generated class OrderRequestLineItem will extend this class (via <php_parent>).
  *
- * @copyright   Copyright (C) 2025 Björn Rudner
+ * @copyright   Copyright (C) 2025-2026 Björn Rudner
  * @license     https://www.gnu.org/licenses/agpl-3.0.en.html
- * @version     2025-11-11
+ * @version     2026-01-16
  */
 
 namespace BR\Extension\OrderRequest\Model;
@@ -140,6 +140,36 @@ class _OrderRequestLineItem extends cmdbAbstractObject
         return ($iMax > 0) ? $iMax + 1 : 1;
     }
 
+
+    public function ComputeReceiptRollups(): void
+    {
+        $ordered = (int) ($this->Get('quantity') ?: 0);
+        $sum = 0;
+
+        /** @var \DBObjectSet $oSet */
+        $oSet = $this->Get('receipts_list');
+        while ($oRec = $oSet->Fetch()) {
+            $sum += (int) ($oRec->Get('quantity') ?: 0);
+        }
+
+        $open = max(0, $ordered - $sum);
+
+        $status = 'none';
+        if ($sum === 0) {
+            $status = 'none';
+        } elseif ($sum < $ordered) {
+            $status = 'partial';
+        } elseif ($sum == $ordered) {
+            $status = 'complete';
+        } else {
+            $status = 'over';
+        }
+
+        $this->Set('quantity_received_total', $sum);
+        $this->Set('quantity_open', $open);
+        $this->Set('receipt_status', $status);
+    }
+
     /**
      * PrefillCreationForm
      *
@@ -189,6 +219,9 @@ class _OrderRequestLineItem extends cmdbAbstractObject
     public function OnLineItemSetInitialAttributesFlags(EventData $oEventData): void
     {
         $this->ForceInitialAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
+        $this->ForceInitialAttributeFlags('quantity_received_total', OPT_ATT_READONLY);
+        $this->ForceInitialAttributeFlags('quantity_open', OPT_ATT_READONLY);
+        $this->ForceInitialAttributeFlags('receipt_status', OPT_ATT_READONLY);
     }
 
     /**
@@ -205,8 +238,10 @@ class _OrderRequestLineItem extends cmdbAbstractObject
     public function OnLineItemSetAttributesFlags(EventData $oEventData): void
     {
         $this->ForceAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
+        $this->ForceAttributeFlags('quantity_received_total', OPT_ATT_READONLY);
+        $this->ForceAttributeFlags('quantity_open', OPT_ATT_READONLY);
+        $this->ForceAttributeFlags('receipt_status', OPT_ATT_READONLY);
 
-        // Never allow changing the parent link on existing lines
         if ((int)$this->GetKey() > 0) {
             $this->ForceAttributeFlags('order_request_id', OPT_ATT_READONLY);
         }
@@ -227,6 +262,7 @@ class _OrderRequestLineItem extends cmdbAbstractObject
             ) {
                 $this->ForceAttributeFlags($sAtt, OPT_ATT_READONLY);
             }
+            // Wichtig: 'functionalcis_list' und 'receipts_list' NICHT sperren
         }
     }
 
@@ -249,46 +285,83 @@ class _OrderRequestLineItem extends cmdbAbstractObject
      */
     public function OnLineItemCheckToWrite(EventData $oEventData): void
     {
+
+        // Welche Attribute wurden wirklich geändert?
+        $aChanged = array_keys($this->ListChanges());
+
+        // Felder, die NUR im Draft geändert werden dürfen (kommerziell/relevant)
+        $aCore = [
+            'name',
+            'vendor_sku',
+            'quantity',
+            'uom',
+            'unit_price_estimated',
+            'total_price_estimated',
+            'description',
+            'line_number',
+            'order_request_id',
+        ];
+
+        // Felder, die AUCH NACH Draft geändert werden dürfen (unbedenklich)
+        // -> füge hier deine Receiving-Felder hinzu, falls du welche hast
+        $aSafeOutsideDraft = [
+            'functionalcis_list',
+            'receipts_list',
+            'quantity_received_total',
+            'quantity_open',
+            'receipt_status',
+        ];
+
+        $bCoreChange = (count(array_intersect($aChanged, $aCore)) > 0);
+        $bOnlySafe   = (count(array_diff($aChanged, $aSafeOutsideDraft)) === 0);
+
         // Parent status guard
-        if (!$this->isParentEditable()) {
+        if (!$this->isParentEditable() && $bCoreChange) {
             $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:ParentNotEditable'));
             return;
         }
 
-        // qty > 0
-        $qty = $this->Get('quantity');
-        if ($qty === null || $qty === '' || (float)$qty <= 0) {
-            $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:QtyMustBePositive'));
-        }
+        // Validierungen nur durchführen, wenn Core-Felder geändert wurden ODER beim Anlegen
+        $bIsNew = (bool) $oEventData->Get('is_new');
+        if ($bCoreChange || $bIsNew) {
+            // qty > 0
+            $qty = $this->Get('quantity');
+            if ($qty === null || $qty === '' || (float)$qty <= 0) {
+                $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:QtyMustBePositive'));
+            }
 
-        // unit price >= 0
-        $price = $this->Get('unit_price_estimated');
-        if ($price !== null && $price !== '' && (float)$price < 0) {
-            $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:UnitPriceNegative'));
-        }
+            // unit price >= 0
+            $price = $this->Get('unit_price_estimated');
+            if ($price !== null && $price !== '' && (float)$price < 0) {
+                $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:UnitPriceNegative'));
+            }
 
-        // UoM required
-        $uom = (string)$this->Get('uom');
-        if ($uom === '') {
-            $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:UomRequired'));
-        }
+            // UoM required
+            $uom = (string)$this->Get('uom');
+            if ($uom === '') {
+                $this->AddCheckIssue(\Dict::S('Class:OrderRequestLineItem/Error:UomRequired'));
+            }
 
-        // Duplicate warning: same OrderRequest + same name + same UoM (other id)
-        $iOrderId = (int)$this->Get('order_request_id');
-        if ($iOrderId > 0 && $uom !== '') {
-            $oSearch = DBObjectSearch::FromOQL(
-                'SELECT OrderRequestLineItem WHERE order_request_id = :id AND name = :name AND uom = :uom AND id != :me'
-            );
-            $oSet = new DBObjectSet($oSearch, [], [
-                'id'   => $iOrderId,
-                'name' => (string)$this->Get('name'),
-                'uom'  => $uom,
-                'me'   => (int)$this->GetKey(),
-            ]);
-            if ($oSet->Count() > 0) {
-                $this->AddCheckWarning(\Dict::S('Class:OrderRequestLineItem/Warning:DuplicateNameUom'));
+            // Duplicate warning (gleiches Name+UoM in gleicher Order, andere ID)
+            $iOrderId = (int)$this->Get('order_request_id');
+            if ($iOrderId > 0 && $uom !== '') {
+                $oSearch = \DBObjectSearch::FromOQL(
+                    'SELECT OrderRequestLineItem WHERE order_request_id = :id AND name = :name AND uom = :uom AND id != :me'
+                );
+                $oSet = new \DBObjectSet($oSearch, [], [
+                    'id'   => $iOrderId,
+                    'name' => (string)$this->Get('name'),
+                    'uom'  => $uom,
+                    'me'   => (int)$this->GetKey(),
+                ]);
+                if ($oSet->Count() > 0) {
+                    $this->AddCheckWarning(\Dict::S('Class:OrderRequestLineItem/Warning:DuplicateNameUom'));
+                }
             }
         }
+
+        // Wenn NUR "sichere" Felder geändert wurden (z. B. functionalcis_list oder Receiving-Felder),
+        // dann hier bewusst KEINE Blockade – durchfallen lassen.
     }
 
     /**
@@ -335,12 +408,22 @@ class _OrderRequestLineItem extends cmdbAbstractObject
      */
     public function OnLineItemBeforeWrite(EventData $oEventData): void
     {
+        // Ensure line_number is set on first write
         $iLine = (int)($this->Get('line_number') ?: 0);
-        if ($iLine > 0) {
-            return;
+        if ($iLine <= 0) {
+            $iOrderId = (int)($this->Get('order_request_id') ?: 0);
+            $this->Set('line_number', $this->getNextLineNumber($iOrderId));
         }
 
-        $iOrderId = (int)($this->Get('order_request_id') ?: 0);
-        $this->Set('line_number', $this->getNextLineNumber($iOrderId));
+        // Always recompute receiving rollups before persist
+        if (method_exists($this, 'ComputeReceiptRollups')) {
+            $this->ComputeReceiptRollups();
+        }
+    }
+
+    public function OnLineItemLinksChanged(?EventData $oEventData): void
+    {
+        // Recompute after add/update/remove of linked receipts
+        $this->ComputeReceiptRollups();
     }
 }
