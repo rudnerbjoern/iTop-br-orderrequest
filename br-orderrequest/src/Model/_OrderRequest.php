@@ -139,12 +139,12 @@ class _OrderRequest extends Ticket
     public function OnOrderRequestSetInitialAttributesFlags(EventData $oEventData): void
     {
         // Protect system/technical attributes from user edits
-        $this->ForceInitialAttributeFlags('ref', OPT_ATT_READONLY);
-        $this->ForceInitialAttributeFlags('start_date', OPT_ATT_READONLY);
-        $this->ForceInitialAttributeFlags('last_update', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('ref', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('start_date', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('last_update', OPT_ATT_READONLY);
 
         // Hide initially to prevent flicker before first compute; still RO later
-        $this->ForceInitialAttributeFlags('estimated_total_cost', OPT_ATT_HIDDEN);
+        $this->AddInitialAttributeFlags('estimated_total_cost', OPT_ATT_HIDDEN);
     }
 
     /**
@@ -159,7 +159,7 @@ class _OrderRequest extends Ticket
     public function OnOrderRequestSetAttributesFlags(EventData $oEventData): void
     {
         // Always computed server-side → never editable
-        $this->ForceAttributeFlags('estimated_total_cost', OPT_ATT_READONLY);
+        $this->AddAttributeFlags('estimated_total_cost', OPT_ATT_READONLY);
     }
 
     /**

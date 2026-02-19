@@ -218,10 +218,10 @@ class _OrderRequestLineItem extends cmdbAbstractObject
      */
     public function OnLineItemSetInitialAttributesFlags(EventData $oEventData): void
     {
-        $this->ForceInitialAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
-        $this->ForceInitialAttributeFlags('quantity_received_total', OPT_ATT_READONLY);
-        $this->ForceInitialAttributeFlags('quantity_open', OPT_ATT_READONLY);
-        $this->ForceInitialAttributeFlags('receipt_status', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('quantity_received_total', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('quantity_open', OPT_ATT_READONLY);
+        $this->AddInitialAttributeFlags('receipt_status', OPT_ATT_READONLY);
     }
 
     /**
@@ -237,13 +237,13 @@ class _OrderRequestLineItem extends cmdbAbstractObject
      */
     public function OnLineItemSetAttributesFlags(EventData $oEventData): void
     {
-        $this->ForceAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
-        $this->ForceAttributeFlags('quantity_received_total', OPT_ATT_READONLY);
-        $this->ForceAttributeFlags('quantity_open', OPT_ATT_READONLY);
-        $this->ForceAttributeFlags('receipt_status', OPT_ATT_READONLY);
+        $this->AddAttributeFlags('total_price_estimated', OPT_ATT_READONLY);
+        $this->AddAttributeFlags('quantity_received_total', OPT_ATT_READONLY);
+        $this->AddAttributeFlags('quantity_open', OPT_ATT_READONLY);
+        $this->AddAttributeFlags('receipt_status', OPT_ATT_READONLY);
 
         if ((int)$this->GetKey() > 0) {
-            $this->ForceAttributeFlags('order_request_id', OPT_ATT_READONLY);
+            $this->AddAttributeFlags('order_request_id', OPT_ATT_READONLY);
         }
 
         // Lock everything if the parent OrderRequest is not in 'draft'
@@ -260,7 +260,7 @@ class _OrderRequestLineItem extends cmdbAbstractObject
                     'order_request_id',
                 ] as $sAtt
             ) {
-                $this->ForceAttributeFlags($sAtt, OPT_ATT_READONLY);
+                $this->AddAttributeFlags($sAtt, OPT_ATT_READONLY);
             }
             // Wichtig: 'functionalcis_list' und 'receipts_list' NICHT sperren
         }

@@ -73,7 +73,7 @@ class _OrderReceiptEntry extends cmdbAbstractObject
     public function OnReceiptSetAttributesFlags(EventData $oEventData): void
     {
         if ((int)$this->GetKey() > 0) {
-            $this->ForceAttributeFlags('order_request_line_item_id', OPT_ATT_READONLY);
+            $this->AddAttributeFlags('order_request_line_item_id', OPT_ATT_READONLY);
         }
     }
 

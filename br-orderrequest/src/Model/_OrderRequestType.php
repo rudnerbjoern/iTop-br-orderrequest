@@ -63,10 +63,10 @@ class _OrderRequestType extends cmdbAbstractObject
 
         if ($bReq) {
             // Make it mandatory in the UI when budget approval is required
-            $this->ForceAttributeFlags('budget_approver_id', OPT_ATT_MANDATORY);
+            $this->AddAttributeFlags('budget_approver_id', OPT_ATT_MANDATORY);
         } else {
             // Ensure we drop any previously forced mandatory flag when not required
-            $this->ForceAttributeFlags('budget_approver_id', 0);
+            $this->AddAttributeFlags('budget_approver_id', 0);
         }
     }
 
